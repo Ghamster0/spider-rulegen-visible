@@ -1,0 +1,22 @@
+{
+  "name": "spider-rulegen-visible",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd packages/shell-chrome && cross-env NODE_ENV=production webpack --progress --hide-modules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ghamster0/spider-rulegen-visible.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ghamster0/spider-rulegen-visible/issues"
+  },
+  "homepage": "https://github.com/Ghamster0/spider-rulegen-visible#readme",
+  "dependencies": {
+    "cross-env": "^7.0.2"
+  }
+}

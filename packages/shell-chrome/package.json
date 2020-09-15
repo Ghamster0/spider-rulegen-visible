@@ -1,0 +1,11 @@
+{
+    "name": "@spider-rulegen/shell-chrome",
+    "version": "0.0.0",
+    "dependencies": {},
+    "devDependencies": {
+        "@spider-rulegen/app-inject": "../app-inject",
+        "@spider-rulegen/build-tools": "../build-tools",
+        "webpack": "^4.19.0",
+        "webpack-cli": "^3.1.0"
+    }
+}

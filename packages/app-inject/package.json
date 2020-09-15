@@ -1,0 +1,10 @@
+{
+    "name": "@spider-rulegen/app-inject",
+    "version": "0.0.0",
+    "private": true,
+    "main": "src/index.js",
+    "dependencies": {
+        "@spider-rulegen/vendor": "../vendor",
+        "vue": "^2.6.10"
+    }
+}

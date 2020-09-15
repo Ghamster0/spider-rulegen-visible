@@ -1,0 +1,63 @@
+{
+    "manifest_version": 2,
+    "name": "spider rules generator",
+    "description": "spider rules generator",
+    "version": "0.0.1",
+    "icons": {
+        "128": "icons/icon.png"
+    },
+    "background": {
+        "scripts": [
+            "build/background.js"
+        ]
+    },
+    "browser_action": {
+        "default_icon": "icons/icon.png",
+        "default_title": "spider rules generator"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "build/contentScriptsStart.js"
+            ],
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "build/contentScriptsEnd.js"
+            ],
+            "run_at": "document_end"
+        },
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "build/contentScriptsIdle.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "webRequest",
+        "webRequestBlocking",
+        "storage",
+        "cookies",
+        "browsingData",
+        "debugger",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "content_security_policy": "script-src 'self' 'unsafe-eval' ; object-src 'self'"
+}
