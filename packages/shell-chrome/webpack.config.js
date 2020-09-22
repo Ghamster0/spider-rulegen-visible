@@ -3,11 +3,10 @@ const { createConfig } = require('@spider-rulegen/build-tools')
 
 module.exports = createConfig({
     entry: {
-        inject: './src/inject.js',
+        backend: './src/backend.js',
         background: './src/background.js',
-        contentScriptsStart: './src/content/contentScriptsStart.js',
-        contentScriptsEnd: './src/content/contentScriptsEnd.js',
-        contentScriptsIdle: './src/content/contentScriptsIdle.js'
+        devtools: './src/devtools.js',
+        'devtools-panel': './src/devtools-panel.js',
     },
     output: {
         path: path.join(__dirname, 'build'),

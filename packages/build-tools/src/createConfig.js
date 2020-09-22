@@ -71,7 +71,7 @@ exports.createConfig = (config, target = { chrome: 52 }) => {
                     ]
                 },
                 {
-                    test: /\.(png|woff2)$/,
+                    test: /\.(png|woff(2)?|ttf|eot|svg)$/,
                     loader: 'url-loader?limit=0'
                 }
             ]

@@ -3,8 +3,9 @@
     "version": "0.0.0",
     "dependencies": {},
     "devDependencies": {
-        "@spider-rulegen/app-inject": "../app-inject",
+        "@spider-rulegen/app-frontend": "../app-frontend",
         "@spider-rulegen/build-tools": "../build-tools",
+        "@spider-rulegen/vendor": "../vendor",
         "webpack": "^4.19.0",
         "webpack-cli": "^3.1.0"
     }

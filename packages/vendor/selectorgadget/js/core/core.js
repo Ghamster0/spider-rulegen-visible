@@ -393,17 +393,26 @@ SelectorGadget.prototype.suggestPredicted = function (prediction) {
     }
 };
 
+// Modify: emit setPath event
 SelectorGadget.prototype.setPath = function (prediction) {
+    let path = ''
     if (prediction && prediction.length > 0) {
-        return this.path_output_field.value = prediction;
-    } else {
-        return this.path_output_field.value = 'No valid path found.';
+        path = prediction
     }
+    this.path_output_field.value = path
+    this.emitter && this.emitter.emit('setPath', path)
+    return path
 };
 
 SelectorGadget.prototype.refreshFromPath = function (e) {
     var path, self;
     self = (e && e.data && e.data.self) || this;
+
+    // Modify: set path from e
+    if (e && e.value !== undefined) {
+        self.path_output_field.value = e.value
+    }
+
     path = self.path_output_field.value;
     self.clearSelected();
     self.suggestPredicted(path);
@@ -492,19 +501,24 @@ SelectorGadget.prototype.addScript = function (src) {
     }
 };
 
+// SelectorGadget.prototype.makeInterface = function () {
+//     this.sg_div = jQuerySG('<div>').attr('id', 'selectorgadget_main').addClass('selectorgadget_bottom').addClass('selectorgadget_ignore');
+//     if (this.useRemoteInterface()) {
+//         this.path_output_field = {
+//             value: null
+//         };
+//         this.remote_data = {};
+//         this.updateRemoteInterface();
+//     } else {
+//         this.makeStandardInterface();
+//     }
+//     return jQuerySG('body').append(this.sg_div);
+// };
+
+// Modify: notify parent to show interface
 SelectorGadget.prototype.makeInterface = function () {
-    this.sg_div = jQuerySG('<div>').attr('id', 'selectorgadget_main').addClass('selectorgadget_bottom').addClass('selectorgadget_ignore');
-    if (this.useRemoteInterface()) {
-        this.path_output_field = {
-            value: null
-        };
-        this.remote_data = {};
-        this.updateRemoteInterface();
-    } else {
-        this.makeStandardInterface();
-    }
-    return jQuerySG('body').append(this.sg_div);
-};
+    this.path_output_field = { value: "" }
+}
 
 SelectorGadget.prototype.makeStandardInterface = function () {
     var path, self;
@@ -541,8 +555,9 @@ SelectorGadget.prototype.makeStandardInterface = function () {
 };
 
 SelectorGadget.prototype.removeInterface = function (e) {
-    this.sg_div.remove();
-    return this.sg_div = null;
+    // Modify: do nothing, cause no element was insert on makeInterface
+    // this.sg_div.remove();
+    // return this.sg_div = null;
 };
 
 SelectorGadget.prototype.unbind = function (e) {
@@ -597,6 +612,28 @@ SelectorGadget.toggle = function (options) {
     }
     return jQuerySG('.selector_gadget_loading').remove();
 };
+
+// Modify: add SelectorGadget.toggleOpen
+SelectorGadget.toggleOpen = function (options) {
+    if (!window.selector_gadget) {
+        window.selector_gadget = new SelectorGadget();
+        window.selector_gadget.makeInterface();
+        window.selector_gadget.clearEverything();
+        window.selector_gadget.setMode('interactive');
+        if ((options != null ? options.analytics : void 0) !== false) {
+            window.selector_gadget.analytics();
+        }
+    } else if (window.selector_gadget.unbound) {
+        window.selector_gadget.rebindAndMakeInterface();
+    }
+    jQuerySG('.selector_gadget_loading').remove();
+    return window.selector_gadget
+}
+
+SelectorGadget.toggleClose = function () {
+    window.selector_gadget && !window.selector_gadget.unbound && window.selector_gadget.unbindAndRemoveInterface();
+    return jQuerySG('.selector_gadget_loading').remove();
+}
 
 SelectorGadget.prototype.analytics = function () {
     var cookie, random, referer, today, urchinUrl, uservar, utmac, utmhn, utmn, utmp;
