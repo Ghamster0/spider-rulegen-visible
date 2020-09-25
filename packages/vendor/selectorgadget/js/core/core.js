@@ -620,9 +620,9 @@ SelectorGadget.toggleOpen = function (options) {
         window.selector_gadget.makeInterface();
         window.selector_gadget.clearEverything();
         window.selector_gadget.setMode('interactive');
-        if ((options != null ? options.analytics : void 0) !== false) {
-            window.selector_gadget.analytics();
-        }
+        // if ((options != null ? options.analytics : void 0) !== false) {
+        //     window.selector_gadget.analytics();
+        // }
     } else if (window.selector_gadget.unbound) {
         window.selector_gadget.rebindAndMakeInterface();
     }

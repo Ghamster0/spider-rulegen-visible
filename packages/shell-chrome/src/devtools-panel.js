@@ -1,35 +1,57 @@
 import { initApp } from "@spider-rulegen/app-frontend"
 import { EventEmitter } from "events"
 
-const port = chrome.runtime.connect({
-    name: '' + chrome.devtools.inspectedWindow.tabId
-})
-
 initApp(createBridge(), 'app')
 
-// setTimeout(() => {
-//     port.postMessage({ type: 'selector:load', value: '.body' })
-//     setTimeout(() => {
-//         port.postMessage({ type: 'selector:deactive' })
-//     }, 5000);
-// }, 1000)
-
 function createBridge() {
-    const emitter = new EventEmitter()
+    let port = connectToBg()
+    let connected = true
 
+    const emitter = new EventEmitter()
     let oldEmit = emitter.emit
     emitter.emit = function () {
         let emitArgs = arguments
-        console.log(emitArgs)
         if (emitArgs[0] === 'msg-to-backend') {
-            port.postMessage(emitArgs[1])
+            connected && port.postMessage(emitArgs[1])
         } else {
             oldEmit.apply(emitter, emitArgs)
         }
     }
 
-    port.onMessage.addListener(e => {
-        oldEmit.apply(emitter, ['msg-from-backend', e])
+    function onConnected(p) {
+        p.onMessage.addListener(e => {
+            oldEmit.apply(emitter, ['msg-from-backend', e])
+        })
+        p.onDisconnect.addListener(() => {
+            connected = false
+        })
+    }
+    onConnected(port)
+
+    function reConnect() {
+        port = connectToBg()
+        connected = true
+        onConnected(port)
+    }
+
+    chrome.devtools.network.onNavigated.addListener(() => {
+        if (connected) {
+            const itvl = setInterval(() => {
+                console.log("Interval onNavigated run")
+                if (!connected) {
+                    reConnect()
+                    clearInterval(itvl)
+                }
+            }, 50)
+        } else {
+            reConnect()
+        }
     })
     return emitter
+}
+
+function connectToBg() {
+    return chrome.runtime.connect({
+        name: '' + chrome.devtools.inspectedWindow.tabId
+    })
 }
