@@ -1,22 +1,34 @@
 <template>
   <div>
-    <div class="tab">
+    <div class="tab d-flex a-center">
       <span>Project</span>
       <select class="ml-5" v-model="project">
-        <option v-for="p in projects" :key="p.id" :value="p">{{p.name}}</option>
+        <option v-for="p in projects" :key="p.id" :value="p">
+          {{ p.name }}
+        </option>
       </select>
     </div>
-    <div v-if="project&&project.rules">
+    <div v-if="project && project.rules">
       <ul class="rules">
         <li
           v-for="rule in project.rules"
           :key="rule.id"
           @click="handleRuleClick(rule)"
-          :class="{'is-active': rule===activeRule}"
-        >{{rule.name}}</li>
+          :class="{ 'is-active': rule === activeRule }"
+        >
+          {{ rule.name }}
+        </li>
       </ul>
-      <div style="display:flex;justify-content: center;position:absolute;bottom:0;width:100%">
-        <button class="text-btn" @click="dialog.visible=true">+ Add</button>
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          position: absolute;
+          bottom: 0;
+          width: 100%;
+        "
+      >
+        <button class="text-btn" @click="dialog.visible = true">+ Add</button>
       </div>
       <app-dialog :visible.sync="dialog.visible">
         <form class="form">

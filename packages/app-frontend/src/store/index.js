@@ -10,17 +10,14 @@ const p = {
         {
             id: "rule_id1",
             name: "Rule 1",
-            startUrls: ["https://www.ixigua.com/search/%E5%8F%98%E6%80%81%E6%89%8B%E6%9C%BA%E6%97%A0%E9%99%90%E5%85%83%E5%AE%9D%E6%B8%B8%E6%88%8F%E6%9C%89%E5%93%AA%E4%BA%9B"],
+            startUrls: ["https://www.ixigua.com/search/变态手机无限元宝游戏有哪些"],
             example: "http://www.baidu.com",
             links: [
                 {
                     id: "" + Math.random(),
-                    name: "下一页",
-                    selector: ".links",
-                    urls: [
-                        "http://www.baidu.com",
-                        "https://www.sogou.com"
-                    ],
+                    name: "next page",
+                    selector: "",
+                    urls: [],
                     handler: ""
                 },
             ],

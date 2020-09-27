@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import './assets/css/fontawesome.min.css'
+import './assets/css/app.css'
 
 import { createStore } from './store'
 import bm from "./views/backend-mixin"

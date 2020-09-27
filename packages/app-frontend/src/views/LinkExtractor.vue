@@ -3,7 +3,7 @@
     style="height: 100%; overflow: scroll; padding: 5px"
     @click="handleUnselectLx"
   >
-    <span style="margin-bottom: 5px; display: block">Link Rules</span>
+    <span style="margin-bottom: 10px; display: block">Link Rules</span>
     <div class="rules">
       <div
         v-for="lx in linksRule"
@@ -85,7 +85,7 @@ export default {
       });
     },
     handleConfirmSelector(lx) {
-      this.loadSelector(lx);
+      this.loadSelector(lx.selector);
     },
     handleAddHandler(lx) {
       const name = window.prompt("Rule Name:");
@@ -117,7 +117,7 @@ export default {
 <style scoped>
 .lx-card {
   margin-bottom: 10px;
-  padding: 5px;
+  padding: 8px;
   border-radius: 4px;
   background-color: #eee;
 }

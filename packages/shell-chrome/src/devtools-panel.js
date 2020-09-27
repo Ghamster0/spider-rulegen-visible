@@ -4,54 +4,38 @@ import { EventEmitter } from "events"
 initApp(createBridge(), 'app')
 
 function createBridge() {
-    let port = connectToBg()
-    let connected = true
-
     const emitter = new EventEmitter()
-    let oldEmit = emitter.emit
-    emitter.emit = function () {
-        let emitArgs = arguments
-        if (emitArgs[0] === 'msg-to-backend') {
-            connected && port.postMessage(emitArgs[1])
-        } else {
-            oldEmit.apply(emitter, emitArgs)
-        }
-    }
+    emitter.oldEmit = emitter.emit
+    let connected = false
 
-    function onConnected(p) {
-        p.onMessage.addListener(e => {
-            oldEmit.apply(emitter, ['msg-from-backend', e])
-        })
-        p.onDisconnect.addListener(() => {
+    function cb(port) {
+        connected = true
+        port.onDisconnect.addListener(() => {
             connected = false
         })
-    }
-    onConnected(port)
-
-    function reConnect() {
-        port = connectToBg()
-        connected = true
-        onConnected(port)
-    }
-
-    chrome.devtools.network.onNavigated.addListener(() => {
-        if (connected) {
-            const itvl = setInterval(() => {
-                console.log("Interval onNavigated run")
-                if (!connected) {
-                    reConnect()
-                    clearInterval(itvl)
-                }
-            }, 50)
-        } else {
-            reConnect()
+        port.onMessage.addListener(e => {
+            emitter.oldEmit.apply(emitter, ['msg-from-backend', e])
+        })
+        emitter.emit = function () {
+            let emitArgs = arguments
+            if (emitArgs[0] === 'msg-to-backend') {
+                connected && port.postMessage(emitArgs[1])
+            } else {
+                emitter.oldEmit.apply(emitter, emitArgs)
+            }
         }
-    })
+    }
+
+    connectToBg(cb)
+    // onNavigate, reconnect
+    chrome.devtools.network.onNavigated.addListener(() => { connectToBg(cb) })
+
     return emitter
 }
 
-function connectToBg() {
-    return chrome.runtime.connect({
+function connectToBg(cb) {
+    const port = chrome.runtime.connect({
         name: '' + chrome.devtools.inspectedWindow.tabId
     })
+    cb(port)
 }

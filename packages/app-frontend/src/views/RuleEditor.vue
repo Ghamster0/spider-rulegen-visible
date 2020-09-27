@@ -1,41 +1,39 @@
 <template>
   <div class="h-100" v-if="Object.keys(rule).length">
-    <div class="navigator d-flex">
-      <div style="padding: 2px">
-        <span>URL</span>
-        <select
-          v-if="exampleMode === 'select'"
-          v-model="rule.example"
-          class="ml-5"
-          style="min-width: 180px; max-width: 360px"
-        >
-          <option v-for="link in links" :key="link">{{ link }}</option>
-        </select>
-        <input
-          v-if="exampleMode === 'edit'"
-          v-model="rule.example"
-          class="ml-5"
-        />
-        <button
-          class="text-btn"
-          v-if="exampleMode === 'select'"
-          @click="exampleMode = 'edit'"
-        >
-          <i class="far fa-edit"></i>
-        </button>
-        <button
-          class="text-btn"
-          v-if="exampleMode === 'edit'"
-          @click="exampleMode = 'select'"
-        >
-          <i class="fas fa-list"></i>
-        </button>
-        <button class="ml-5" @click="handleNavgation">Go!</button>
-      </div>
+    <div class="tab d-flex a-center">
+      <button
+        class="text-btn"
+        @click="exampleMode = exampleMode === 'edit' ? 'select' : 'edit'"
+        style="color: #888"
+        title="Toggle select or input"
+      >
+        <i class="fas fa-exchange-alt"></i>
+      </button>
+      <select
+        v-if="exampleMode === 'select'"
+        v-model="rule.example"
+        class="ml-5"
+        style="width: 360px; box-sizing: content-box"
+      >
+        <option v-for="link in links" :key="link">{{ link }}</option>
+      </select>
+      <input
+        v-if="exampleMode === 'edit'"
+        v-model="rule.example"
+        class="ml-5"
+        style="width: 360px"
+      />
+      <button
+        class="text-btn nav-btn"
+        @click="handleNavgation"
+        title="Navigate to the target url"
+      >
+        <i class="fas fa-location-arrow"></i>
+      </button>
       <app-tab
         :options="['提链', '抽取']"
         :active.sync="active"
-        style="margin-left: 10px"
+        style="margin-left: 10px; align-self: stretch"
       ></app-tab>
     </div>
     <link-extractor
@@ -94,15 +92,14 @@ export default {
 </script>
 
 <style scoped>
-select {
-  padding: 1px;
+.nav-btn {
+  transition: color 0.5s;
+  color: #222;
+  margin-left: 3px;
 }
-.navigator {
-  font-size: 14px;
-  background-color: #eee;
-  border-bottom: 1px solid #bbb;
-}
-button:focus {
+.nav-btn:active,
+.nav-btn:focus {
+  color: rgb(26, 115, 232);
   outline: none;
 }
 </style>

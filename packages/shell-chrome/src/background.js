@@ -36,11 +36,12 @@ function injectBackend(tabId) {
     chrome.tabs.executeScript(tabId, {
         file: 'build/backend.js'
     }, function (res) {
-        console.log(res)
+        console.log("Inject backend finish: ", res)
     })
 }
 
 function doublePipe(id, one, two) {
+
     one.onMessage.addListener(lOne)
     function lOne(message) {
         if (message.event === 'log') {
@@ -69,8 +70,3 @@ function doublePipe(id, one, two) {
     two.onDisconnect.addListener(shutdown)
     console.log('tab ' + id + ' connected.')
 }
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log("request: ", request)
-    console.log("sender: ", sender)
-})

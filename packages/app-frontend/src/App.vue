@@ -23,59 +23,14 @@ export default {
     Sider,
     RuleEditor,
   },
-  methods: {
-    handleRuleChange(rule) {
-      console.log(rule);
-    },
-  },
 };
 </script>
 
 <style>
-.d-flex {
-  display: flex;
-  flex-wrap: wrap;
-}
-.ml-5 {
-  margin-left: 5px;
-}
-.h-100 {
-  height: 100%;
-}
-button {
-  cursor: pointer;
-}
-.text-btn {
-  background-color: inherit;
-  border: none;
-}
 .tab {
   height: 25px;
   font-size: 14px;
   background-color: #eee;
   border-bottom: 1px solid #bbb;
-}
-
-form.form {
-  display: table;
-}
-
-.form-item {
-  display: table-row;
-}
-
-.form-item > label,
-.form-item > input,
-.form-item > textarea {
-  display: table-cell;
-  margin-bottom: 10px;
-}
-.form-item > textarea {
-  min-width: 171px;
-}
-
-.form-item > label {
-  vertical-align: top;
-  padding-right: 10px;
 }
 </style>
