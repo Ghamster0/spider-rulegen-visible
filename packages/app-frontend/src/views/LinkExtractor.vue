@@ -3,7 +3,7 @@
     style="height: 100%; overflow: scroll; padding: 5px"
     @click="handleUnselectLx"
   >
-    <span style="margin-bottom: 10px; display: block">Link Rules</span>
+    <span style="margin-bottom: 5px; display: block">Links</span>
     <div class="rules">
       <div
         v-for="lx in linksRule"
@@ -33,6 +33,9 @@
             <i class="fas fa-plus"></i>
           </button>
         </div>
+        <button class="text-btn ml-auto" @click.stop="handleRemoveLx(lx)">
+          <i class="fas fa-times-circle"></i>
+        </button>
         <div style="width: 100%"></div>
         <div v-if="lx.urls && lx.urls.length" class="lx-urls">
           <pre style="margin: 0">{{ lx.urls.join("\n") }}</pre>
@@ -47,9 +50,10 @@
 <script>
 import { mapState } from "vuex";
 import BackendMixin from "./backend-mixin";
+import ModelMixin from "./model-mixin";
 
 export default {
-  mixins: [BackendMixin],
+  mixins: [BackendMixin, ModelMixin],
   props: {
     linksRule: {},
   },
@@ -76,13 +80,7 @@ export default {
       this.unLoadSelector();
     },
     handleAddLx() {
-      this.$store.commit("ADD_RULE_LINK", {
-        id: "rule_link_" + Math.random(),
-        name: "",
-        selector: "",
-        urls: [],
-        handler: "",
-      });
+      this.$store.commit("ADD_RULE_LINK", this.getBaseRuleLinks());
     },
     handleConfirmSelector(lx) {
       this.loadSelector(lx.selector);
@@ -90,14 +88,10 @@ export default {
     handleAddHandler(lx) {
       const name = window.prompt("Rule Name:");
       if (name) {
-        const rule = {
-          id: "rule_" + Math.random(),
+        const rule = Object.assign(this.getBaseRule(), {
           name: name,
-          example: "",
           extendUrls: { [lx.id]: lx.urls },
-          links: [],
-          contents: [],
-        };
+        });
         this.$store.commit("ADD_RULE", rule);
         lx.handler = rule.id;
       }
@@ -109,6 +103,9 @@ export default {
         handlerId: lx.handler,
         urls: lx.urls,
       });
+    },
+    handleRemoveLx(lx) {
+      this.$store.dispatch("REMOVE_RULE_LINK", lx);
     },
   },
 };

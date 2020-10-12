@@ -3,33 +3,10 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-const p = {
-    id: "project_id1",
-    name: "Project 1",
-    rules: [
-        {
-            id: "rule_id1",
-            name: "Rule 1",
-            startUrls: ["https://www.ixigua.com/search/变态手机无限元宝游戏有哪些"],
-            example: "http://www.baidu.com",
-            links: [
-                {
-                    id: "" + Math.random(),
-                    name: "next page",
-                    selector: "",
-                    urls: [],
-                    handler: ""
-                },
-            ],
-            contents: []
-        }
-    ]
-}
-
 export function createStore() {
     const store = new Vuex.Store({
         state: () => ({
-            projects: [p],
+            projects: [],
             project: {},
             rule: {},
             ruleLink: {},
@@ -39,17 +16,38 @@ export function createStore() {
             LOAD_PROJECT(state, p) {
                 state.project = p
             },
+            ADD_PROJECT(state, project) {
+                state.projects.push(project)
+            },
+            REMOVE_PROJECT(state, project) {
+                const index = state.projects.indexOf(project)
+                if (index >= 0) {
+                    state.projects.splice(index, 1)
+                }
+            },
             LOAD_RULE(state, rule) {
                 state.rule = rule
-            },
-            LOAD_RULE_LINK(state, ruleLink) {
-                state.ruleLink = ruleLink
             },
             ADD_RULE(state, rule) {
                 state.project.rules.push(rule)
             },
+            REMOVE_RULE(state, rule) {
+                const index = state.project.rules.indexOf(rule)
+                if (index >= 0) {
+                    state.project.rules.splice(index, 1)
+                }
+            },
+            LOAD_RULE_LINK(state, ruleLink) {
+                state.ruleLink = ruleLink
+            },
             ADD_RULE_LINK(state, ruleLink) {
                 state.rule.links.push(ruleLink)
+            },
+            REMOVE_RULE_LINK(state, ruleLink) {
+                const index = state.rule.links.indexOf(ruleLink)
+                if (index >= 0) {
+                    state.rule.links.splice(index, 1)
+                }
             },
             ADD_RULE_CONTENT(state, content) {
                 state.project.contents.push(content)
@@ -79,20 +77,52 @@ export function createStore() {
                         break
                     }
                 }
+            },
+            CLEAN_DEPEND_HANDLERS(state, ruleId) {
+                for (const rule of state.project.rules) {
+                    for (const lx of rule.links) {
+                        if (lx.handler === ruleId) {
+                            lx.handler = ""
+                        }
+                    }
+                }
             }
         },
         actions: {
+            ADD_PROJECT({ commit }, project) {
+                commit("ADD_PROJECT", project)
+                commit("LOAD_PROJECT", project)
+            },
+            REMOVE_PROJECT({ commit, state }, project) {
+                commit("REMOVE_PROJECT", project)
+                if (state.project === project) {
+                    commit("LOAD_PROJECT", {})
+                    commit("LOAD_RULE", {})
+                }
+            },
             ADD_RULE({ commit }, rule) {
-                const r = Object.assign({
-                    links: [],
-                    contents: []
-                }, rule)
-                commit("ADD_RULE", r)
-                commit("LOAD_RULE", r)
+                commit("ADD_RULE", rule)
+                commit("LOAD_RULE", rule)
+            },
+            REMOVE_RULE({ commit, state }, rule) {
+                commit("CLEAN_DEPEND_HANDLERS", rule.id)
+                if (state.rule === rule) {
+                    commit("LOAD_RULE_LINK", {})
+                    commit("LOAD_RULE", {})
+                }
+                for (const r of rule.links) {
+                    commit("CLEAN_EXTEND_URLS", r.id)
+                }
+                commit("REMOVE_RULE", rule)
             },
             ADD_RULE_LINK({ commit }, ruleLink) {
                 commit("ADD_RULE_LINK", ruleLink)
                 commit("LOAD_RULE_LINK", ruleLink)
+            },
+            REMOVE_RULE_LINK({ commit }, ruleLink) {
+                commit("CLEAN_EXTEND_URLS", ruleLink.id)
+                commit("REMOVE_RULE_LINK", ruleLink)
+                commit("LOAD_RULE_LINK", {})
             },
             CHANGE_RULE_LINK_HANDLER({ commit }, { ruleLinkId, handlerId, urls }) {
                 commit("CLEAN_EXTEND_URLS", ruleLinkId)

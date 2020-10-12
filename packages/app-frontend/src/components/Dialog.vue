@@ -1,6 +1,6 @@
 <template>
   <dialog :id="dialogId">
-    <button @click="onClose" style="margin-bottom:10px">X</button>
+    <button @click="onClose" style="margin-bottom: 10px">X</button>
     <slot></slot>
   </dialog>
 </template>
@@ -46,5 +46,7 @@ export default {
 <style scoped>
 dialog {
   position: fixed;
+  background-color: #ddd;
+  border-radius: 5px;
 }
 </style>

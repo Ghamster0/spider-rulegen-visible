@@ -7,6 +7,10 @@
   align-items: center;
 }
 
+.ml-auto {
+  margin-left: auto;
+}
+
 .ml-5 {
   margin-left: 5px;
 }
@@ -25,15 +29,63 @@ button {
   border-radius: 4px;
 }
 
+button+button {
+  margin-left: 5px;
+}
+
 button:focus,
 button:active {
   outline: none;
   border-color: rgb(189, 208, 232);
 }
 
+button.circle {
+  border: none;
+  padding: 5px;
+  border-radius: 50%;
+}
+
+button.primary {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
+}
+
+button.primary:active {
+  background-color: #3a8ee6;
+  border-color: #3a8ee6;
+}
+
+button.danger {
+  background-color: #f78989;
+  border-color: #f78989;
+}
+
+button.danger:active {
+  background-color: #dd6161;
+  border-color: #dd6161;
+}
+
 button.text-btn {
+  color: #aaa;
+  transition: color 0.5s;
+  background-color: unset;
+  border: none;
+}
+
+button.text-btn:hover {
   color: #333;
-  background-color: inherit;
+}
+
+button.text-btn.light {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+button.text-btn.light:hover {
+  color: #fff;
+}
+
+button.text-btn:focus,
+button.text-btn:active {
   border: none;
 }
 
@@ -62,18 +114,20 @@ form.form {
 }
 
 select,
-input {
+input,
+textarea {
   background-color: white;
   border: 1px solid white;
 }
 
 select:hover,
-input:hover {
+input:hover textarea:hover {
   border-color: rgb(224, 224, 224);
 }
 
 select:focus,
-input:focus {
+input:focus,
+textarea:focus {
   border-color: rgb(26, 115, 232);
   outline: none;
 }
