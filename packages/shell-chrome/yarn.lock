@@ -6,6 +6,7 @@
   version "0.0.0"
   dependencies:
     "@spider-rulegen/vendor" "../vendor"
+    v-click-outside "^3.1.2"
     vue "^2.6.10"
     vuex "^3.5.1"
 
@@ -3307,6 +3308,11 @@ util@^0.11.0:
   integrity sha1-MjZzNyDsZLsn9uJvQhqqLhtYjWE=
   dependencies:
     inherits "2.0.3"
+
+v-click-outside@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.npm.taobao.org/v-click-outside/download/v-click-outside-3.1.2.tgz#1dbaa14bf09a21bd16f23a38f03bfa3988f71281"
+  integrity sha1-HbqhS/CaIb0W8jo48Dv6OYj3EoE=
 
 v8-compile-cache@^2.1.1:
   version "2.1.1"

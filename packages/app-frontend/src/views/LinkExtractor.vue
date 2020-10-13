@@ -1,8 +1,5 @@
 <template>
-  <div
-    style="height: 100%; overflow: scroll; padding: 5px"
-    @click="handleUnselectLx"
-  >
+  <div style="height: 100%; overflow: scroll; padding: 5px">
     <span style="margin-bottom: 5px; display: block">Links</span>
     <div class="rules">
       <div
@@ -10,7 +7,8 @@
         :key="lx.id"
         class="lx-card d-flex"
         :class="{ 'is-active': lx === activelx }"
-        @click.stop="handleSelectLx(lx)"
+        @click="handleSelectLx(lx)"
+        v-click-outside="() => handleUnselectLx(lx)"
       >
         <div class="lx-column">
           <input v-model="lx.name" placeholder="name" />
@@ -38,7 +36,7 @@
         </button>
         <div style="width: 100%"></div>
         <div v-if="lx.urls && lx.urls.length" class="lx-urls">
-          <pre style="margin: 0">{{ lx.urls.join("\n") }}</pre>
+          <pre style="margin: 0">{{ stringifyUrls(lx.urls) }}</pre>
         </div>
       </div>
       <button @click="handleAddLx">+ Add</button>
@@ -58,13 +56,20 @@ export default {
     linksRule: {},
   },
   computed: {
-    ...mapState({ activelx: "ruleLink", project: "project" }),
+    ...mapState({ activelx: "ruleLink", site: "site" }),
     handlerMapping() {
-      const rules = this.project.rules;
+      const rules = this.site.rules;
       return rules.map((r) => ({ name: r.name, id: r.id }));
     },
   },
   methods: {
+    stringifyUrls(urls) {
+      if (urls.length > 10) {
+        urls = urls.slice(0, 10);
+        urls.push("...");
+      }
+      return urls.join("\n");
+    },
     handleSelectLx(lx) {
       if (lx === this.activelx) {
         return;
@@ -72,8 +77,8 @@ export default {
       this.$store.commit("LOAD_RULE_LINK", lx);
       this.loadSelector(lx.selector);
     },
-    handleUnselectLx() {
-      if (this.activelx === null) {
+    handleUnselectLx(lx) {
+      if (this.activelx != lx) {
         return;
       }
       this.$store.commit("LOAD_RULE_LINK", null);

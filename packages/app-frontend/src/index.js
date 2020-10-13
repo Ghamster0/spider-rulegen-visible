@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
+import VClickOutside from "v-click-outside"
 import './assets/css/fontawesome.min.css'
 import './assets/css/app.css'
 
@@ -7,6 +8,7 @@ import { createStore } from './store'
 import bm from "./views/backend-mixin"
 
 Vue.config.productionTip = false
+Vue.use(VClickOutside)
 
 const store = createStore()
 

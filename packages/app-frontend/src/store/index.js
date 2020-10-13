@@ -6,35 +6,35 @@ Vue.use(Vuex)
 export function createStore() {
     const store = new Vuex.Store({
         state: () => ({
-            projects: [],
-            project: {},
+            sites: [],
+            site: {},
             rule: {},
             ruleLink: {},
             ruleContent: {}
         }),
         mutations: {
-            LOAD_PROJECT(state, p) {
-                state.project = p
+            LOAD_SITE(state, p) {
+                state.site = p
             },
-            ADD_PROJECT(state, project) {
-                state.projects.push(project)
+            ADD_SITE(state, site) {
+                state.sites.push(site)
             },
-            REMOVE_PROJECT(state, project) {
-                const index = state.projects.indexOf(project)
+            REMOVE_SITE(state, site) {
+                const index = state.sites.indexOf(site)
                 if (index >= 0) {
-                    state.projects.splice(index, 1)
+                    state.sites.splice(index, 1)
                 }
             },
             LOAD_RULE(state, rule) {
                 state.rule = rule
             },
             ADD_RULE(state, rule) {
-                state.project.rules.push(rule)
+                state.site.rules.push(rule)
             },
             REMOVE_RULE(state, rule) {
-                const index = state.project.rules.indexOf(rule)
+                const index = state.site.rules.indexOf(rule)
                 if (index >= 0) {
-                    state.project.rules.splice(index, 1)
+                    state.site.rules.splice(index, 1)
                 }
             },
             LOAD_RULE_LINK(state, ruleLink) {
@@ -50,7 +50,7 @@ export function createStore() {
                 }
             },
             ADD_RULE_CONTENT(state, content) {
-                state.project.contents.push(content)
+                state.site.contents.push(content)
                 state.ruleContent = content
             },
             SET_RULE_LINK_SELECTOR(state, cssSelector) {
@@ -60,7 +60,7 @@ export function createStore() {
                 state.ruleLink.urls = urls
             },
             CLEAN_EXTEND_URLS(state, ruleLinkId) {
-                for (const rule of state.project.rules) {
+                for (const rule of state.site.rules) {
                     if (rule.extendUrls && rule.extendUrls[ruleLinkId]) {
                         delete rule.extendUrls[ruleLinkId]
                         break
@@ -68,7 +68,7 @@ export function createStore() {
                 }
             },
             SET_EXTEND_URLS(state, { ruleLinkId, handlerId, urls }) {
-                for (const rule of state.project.rules) {
+                for (const rule of state.site.rules) {
                     if (rule.id === handlerId) {
                         if (!rule.extendUrls) {
                             rule.extendUrls = {}
@@ -79,7 +79,7 @@ export function createStore() {
                 }
             },
             CLEAN_DEPEND_HANDLERS(state, ruleId) {
-                for (const rule of state.project.rules) {
+                for (const rule of state.site.rules) {
                     for (const lx of rule.links) {
                         if (lx.handler === ruleId) {
                             lx.handler = ""
@@ -89,14 +89,14 @@ export function createStore() {
             }
         },
         actions: {
-            ADD_PROJECT({ commit }, project) {
-                commit("ADD_PROJECT", project)
-                commit("LOAD_PROJECT", project)
+            ADD_SITE({ commit }, site) {
+                commit("ADD_SITE", site)
+                commit("LOAD_SITE", site)
             },
-            REMOVE_PROJECT({ commit, state }, project) {
-                commit("REMOVE_PROJECT", project)
-                if (state.project === project) {
-                    commit("LOAD_PROJECT", {})
+            REMOVE_SITE({ commit, state }, site) {
+                commit("REMOVE_SITE", site)
+                if (state.site === site) {
+                    commit("LOAD_SITE", {})
                     commit("LOAD_RULE", {})
                 }
             },

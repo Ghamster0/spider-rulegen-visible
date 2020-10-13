@@ -18,6 +18,9 @@
       <button class="circle primary" @click="logg">
         <i class="fas fa-bug"></i>
       </button>
+      <!-- <button class="circle primary" @click="test">
+        <i class="fas fa-bug"></i>
+      </button> -->
     </div>
   </div>
 </template>
@@ -37,13 +40,22 @@ export default {
   },
   methods: {
     logg() {
-      console.log("Store: ", this.$store);
+      console.log("Store: ", this.$store, this.$store.state);
     },
     handleDownload() {
       download(
         "rules.json",
-        JSON.stringify(this.$store.state.projects, null, 2)
+        JSON.stringify(this.$store.state.sites, null, 2)
       );
+    },
+    test() {
+      chrome.tabs.query({ active: true }, function (tabs) {
+        console.log(tabs);
+      });
+      chrome.tabs.query({}, function (tabs) {
+        console.log(tabs);
+        chrome.tabs.update(tabs[0].id, { active: true }, (tab) => {});
+      });
     },
   },
 };

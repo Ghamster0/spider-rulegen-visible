@@ -1,5 +1,5 @@
-const eg = {
-    id: "project_1",
+const example = {
+    id: "site_1",
     name: "p1",
     rules: [
         {
@@ -26,9 +26,9 @@ const eg = {
 
 export default {
     methods: {
-        getBaseProject() {
+        getBaseSite() {
             return {
-                id: "project_" + Math.random(),
+                id: "site_" + Math.random(),
                 name: "",
                 rules: []
             }

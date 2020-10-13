@@ -2,46 +2,46 @@
   <div>
     <div class="tab d-flex a-center">
       <i class="fas fa-spider" style="color: #333; padding-left: 5px"></i>
-      <select class="ml-5" v-model="project" style="flex: auto; min-width: 1px">
-        <option v-for="p in projects" :key="p.id" :value="p">
+      <select class="ml-5" v-model="site" style="flex: auto; min-width: 1px">
+        <option v-for="p in sites" :key="p.id" :value="p">
           {{ p.name }}
         </option>
       </select>
       <button
         class="text-btn"
-        v-if="project && Object.keys(project).length"
+        v-if="site && Object.keys(site).length"
         style="padding: 2px 4px"
-        @click="handleDeleteProject(project)"
+        @click="handleDeleteSite(site)"
       >
         <i class="far fa-trash-alt"></i>
       </button>
       <button
         class="text-btn"
         style="padding: 2px 4px"
-        @click="projectDialog.visible = true"
+        @click="handleSiteDialogOpen"
       >
         <i class="fas fa-plus-circle"></i>
       </button>
     </div>
-    <app-dialog :visible.sync="projectDialog.visible">
+    <app-dialog :visible.sync="siteDialog.visible">
       <form class="form">
         <div class="form-item">
           <label for="name">名称</label>
           <input
-            v-model="projectDialog.name"
+            v-model="siteDialog.name"
             style="width: 100%; box-sizing: border-box"
           />
         </div>
         <div class="form-item">
           <label></label>
-          <button @click.prevent="handleAddProject">确认</button>
+          <button @click.prevent="handleAddSite">确认</button>
         </div>
       </form>
     </app-dialog>
-    <div v-if="project && project.rules">
+    <div v-if="site && site.rules">
       <ul class="rules" style="margin-top: 1px">
         <li
-          v-for="rule in project.rules"
+          v-for="rule in site.rules"
           :key="rule.id"
           @click="handleRuleClick(rule)"
           :class="{ 'is-active': rule === activeRule }"
@@ -69,7 +69,7 @@
         <button
           class="text-btn"
           style="width: 100%; font-size: large"
-          @click="ruleDialog.visible = true"
+          @click="handleRuleDialogOpen"
         >
           <i class="fas fa-plus-circle"></i>
         </button>
@@ -118,21 +118,21 @@ export default {
         name: "",
         startUrls: "",
       },
-      projectDialog: {
+      siteDialog: {
         visible: false,
         name: "",
       },
     };
   },
   computed: {
-    ...mapState(["projects"]),
+    ...mapState(["sites"]),
     ...mapState({ activeRule: "rule" }),
-    project: {
+    site: {
       get() {
-        return this.$store.state.project;
+        return this.$store.state.site;
       },
       set(val) {
-        this.$store.commit("LOAD_PROJECT", val);
+        this.$store.commit("LOAD_SITE", val);
       },
     },
   },
@@ -140,9 +140,14 @@ export default {
     handleRuleClick(r) {
       this.$store.commit("LOAD_RULE", r);
     },
+    handleRuleDialogOpen() {
+      this.ruleDialog.visible = true;
+      this.ruleDialog.name = "start_urls";
+      this.ruleDialog.startUrls = [];
+    },
     handleAddRule() {
       if (!this.ruleDialog.name || !this.ruleDialog.startUrls) {
-        console.log("Error, name and startUrls must not null");
+        alert("Error, name and startUrls must not null");
         return;
       }
       const rule = Object.assign(this.getBaseRule(), {
@@ -155,15 +160,19 @@ export default {
     handleDeleteRule(rule) {
       this.$store.dispatch("REMOVE_RULE", rule);
     },
-    handleDeleteProject(project) {
-      this.$store.dispatch("REMOVE_PROJECT", project);
+    handleDeleteSite(site) {
+      this.$store.dispatch("REMOVE_SITE", site);
     },
-    handleAddProject() {
-      const project = Object.assign(this.getBaseProject(), {
-        name: this.projectDialog.name,
+    handleSiteDialogOpen() {
+      this.siteDialog.visible = true;
+      this.siteDialog.name = "new site";
+    },
+    handleAddSite() {
+      const site = Object.assign(this.getBaseSite(), {
+        name: this.siteDialog.name,
       });
-      this.$store.dispatch("ADD_PROJECT", project);
-      this.projectDialog.visible = false;
+      this.$store.dispatch("ADD_SITE", site);
+      this.siteDialog.visible = false;
     },
   },
 };
