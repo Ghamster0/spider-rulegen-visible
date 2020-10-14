@@ -43,10 +43,37 @@ export default {
       console.log("Store: ", this.$store, this.$store.state);
     },
     handleDownload() {
-      download(
-        "rules.json",
-        JSON.stringify(this.$store.state.sites, null, 2)
-      );
+      // filter urls too long
+      const sites = this.$store.state.sites.map((site) => {
+        const siteCopy = Object.assign({}, site);
+        siteCopy.rules = siteCopy.rules.map((rule) => {
+          const ruleCopy = Object.assign({}, rule);
+          if (rule.extendUrls) {
+            const extendUrlsCopy = {};
+            for (const key in rule.extendUrls) {
+              const urls = rule.extendUrls[key];
+              if (urls.length > 3) {
+                extendUrlsCopy[key] = urls.slice(0, 3);
+                extendUrlsCopy[key].push("...");
+              } else {
+                extendUrlsCopy[key] = urls;
+              }
+            }
+            ruleCopy.extendUrls = extendUrlsCopy;
+          }
+          ruleCopy.links = rule.links.map((link) => {
+            if (link.urls.length <= 5) {
+              return link;
+            }
+            const urlsCopy = link.urls.slice(0, 5);
+            urlsCopy.push("...");
+            return Object.assign({}, link, { urls: urlsCopy });
+          });
+          return ruleCopy;
+        });
+        return siteCopy;
+      });
+      download("rules.json", JSON.stringify(sites, null, 2));
     },
     test() {
       chrome.tabs.query({ active: true }, function (tabs) {
