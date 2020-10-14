@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import { cloneDeep } from "lodash";
+
 import ColSplit from "./components/ColSplit.vue";
 import RuleEditor from "./views/RuleEditor.vue";
 import Sider from "./views/Sider.vue";
@@ -44,35 +46,23 @@ export default {
     },
     handleDownload() {
       // filter urls too long
-      const sites = this.$store.state.sites.map((site) => {
-        const siteCopy = Object.assign({}, site);
-        siteCopy.rules = siteCopy.rules.map((rule) => {
-          const ruleCopy = Object.assign({}, rule);
+      const sites = cloneDeep(this.$store.state.sites);
+      for (const site of sites) {
+        for (const rule of site.rules) {
           if (rule.extendUrls) {
-            const extendUrlsCopy = {};
             for (const key in rule.extendUrls) {
-              const urls = rule.extendUrls[key];
-              if (urls.length > 3) {
-                extendUrlsCopy[key] = urls.slice(0, 3);
-                extendUrlsCopy[key].push("...");
-              } else {
-                extendUrlsCopy[key] = urls;
-              }
+              rule.extendUrls[key] = rule.extendUrls[key].slice(0, 3);
+              rule.extendUrls[key].push("...");
             }
-            ruleCopy.extendUrls = extendUrlsCopy;
           }
-          ruleCopy.links = rule.links.map((link) => {
-            if (link.urls.length <= 5) {
-              return link;
+          for (const link of rule.links) {
+            if (link.urls.length > 5) {
+              link.urls = link.urls.slice(0, 5);
+              link.urls.push("...");
             }
-            const urlsCopy = link.urls.slice(0, 5);
-            urlsCopy.push("...");
-            return Object.assign({}, link, { urls: urlsCopy });
-          });
-          return ruleCopy;
-        });
-        return siteCopy;
-      });
+          }
+        }
+      }
       download("rules.json", JSON.stringify(sites, null, 2));
     },
     test() {
