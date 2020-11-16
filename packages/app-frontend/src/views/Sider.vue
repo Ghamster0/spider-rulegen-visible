@@ -92,7 +92,7 @@
           </div>
           <div class="form-item">
             <label></label>
-            <button @click.prevent="handleAddRule">确认</button>
+            <button type="submit" @click.prevent="handleAddRule">确认</button>
           </div>
         </form>
       </app-dialog>
@@ -143,7 +143,7 @@ export default {
     handleRuleDialogOpen() {
       this.ruleDialog.visible = true;
       this.ruleDialog.name = "start_urls";
-      this.ruleDialog.startUrls = [];
+      this.ruleDialog.startUrls = "";
     },
     handleAddRule() {
       if (!this.ruleDialog.name || !this.ruleDialog.startUrls) {
