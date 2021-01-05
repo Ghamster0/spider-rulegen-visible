@@ -15,7 +15,7 @@
         class="ml-5"
         style="width: 360px; box-sizing: content-box"
       >
-        <option v-for="link in links" :key="link">{{ link }}</option>
+        <option v-for="url in extendUrls" :key="url">{{ url }}</option>
       </select>
       <input
         v-if="exampleMode === 'edit'"
@@ -38,19 +38,22 @@
     </div>
     <link-extractor
       v-if="active === '提链'"
-      :linksRule="rule.links"
+      :linksConf="rule.links"
     ></link-extractor>
-    <content-extractor v-if="active === '抽取'"></content-extractor>
+    <content-extractor
+      v-if="active === '抽取'"
+      :template.sync="rule.contentsConf"
+    ></content-extractor>
   </div>
 </template>
 
 <script>
 import AppTab from "../components/Tab.vue";
+import BackendMixin from "./backend-mixin";
 import LinkExtractor from "./LinkExtractor.vue";
 import ContentExtractor from "./ContentExtractor.vue";
 
 import { mapState } from "vuex";
-import BackendMixin from "./backend-mixin";
 
 export default {
   components: {
@@ -66,7 +69,18 @@ export default {
     };
   },
   computed: {
-    ...mapState(["rule"]),
+    ...mapState(["rule", "ruleId", "rules"]),
+    extendUrls() {
+      let urls = [];
+      for (const r of this.rules) {
+        for (const lx of r.links) {
+          if (lx.handler === this.ruleId && lx.urls) {
+            urls = urls.concat(lx.urls);
+          }
+        }
+      }
+      return urls;
+    },
     links() {
       if (this.rule.startUrls) {
         return this.rule.startUrls;

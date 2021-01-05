@@ -6,29 +6,24 @@ initApp(createBridge(), 'app')
 function createBridge() {
     const emitter = new EventEmitter()
     emitter.oldEmit = emitter.emit
-    let connected = false
 
-    function cb(port) {
-        connected = true
-        port.onDisconnect.addListener(() => {
-            connected = false
-        })
-        port.onMessage.addListener(e => {
-            emitter.oldEmit.apply(emitter, ['msg-from-backend', e])
-        })
+    function listenPort(port) {
+        let disConnected = false
+        port.onMessage.addListener(msg => emitter.oldEmit.apply(emitter, ['msg-from-backend', msg]))
+        port.onDisconnect.addListener(() => { disConnected = true })
+
         emitter.emit = function () {
-            let emitArgs = arguments
-            if (emitArgs[0] === 'msg-to-backend') {
-                connected && port.postMessage(emitArgs[1])
+            if (arguments[0] === 'msg-to-backend') {
+                !disConnected && port.postMessage(arguments[1])
             } else {
-                emitter.oldEmit.apply(emitter, emitArgs)
+                emitter.oldEmit.apply(emitter, arguments)
             }
         }
     }
 
-    connectToBg(cb)
+    connectToBg(listenPort)
     // onNavigate, reconnect
-    chrome.devtools.network.onNavigated.addListener(() => { connectToBg(cb) })
+    chrome.devtools.network.onNavigated.addListener(() => { connectToBg(listenPort) })
 
     return emitter
 }

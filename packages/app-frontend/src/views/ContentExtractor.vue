@@ -1,143 +1,273 @@
 <template>
-  <div style="height: 100%; overflow: scroll; padding: 5px">
-    <span style="margin-bottom: 5px; display: block">Links</span>
-    <div class="rules">
-      <div
-        v-for="lx in linksRule"
-        :key="lx.id"
-        class="lx-card d-flex"
-        :class="{ 'is-active': lx === activelx }"
-        @click="handleSelectLx(lx)"
-        v-click-outside="() => handleUnselectLx(lx)"
-      >
-        <div class="lx-column">
-          <input v-model="lx.name" placeholder="name" />
-        </div>
-        <div class="lx-column">
-          <input
-            v-model="lx.selector"
-            placeholder="css selector"
-            @keydown.enter="handleConfirmSelector(lx)"
-          />
-        </div>
-        <div class="lx-column">
-          <span style="margin-right: 5px">handler</span>
-          <select v-model="lx.handler" @change="handleHandlerChange(lx)">
-            <option v-for="h in handlerMapping" :key="h.id" :value="h.id">
-              {{ h.name }}({{ h.id }})
-            </option>
-          </select>
-          <button class="text-btn" @click="handleAddHandler(lx)">
-            <i class="fas fa-plus"></i>
+  <div style="padding: 10px; background-color: rgb(189, 208, 232)">
+    <table
+      v-click-outside="
+        () => {
+          editingKey = '';
+        }
+      "
+    >
+      <tr>
+        <th style="width: 200px">名称</th>
+        <th style="width: 100px">类型</th>
+        <th>CSS选择器</th>
+        <th style="width: 220px">
+          <button v-if="hasTemplate" @click="handleRemoveTemplate">
+            清空模板
           </button>
-        </div>
-        <button class="text-btn ml-auto" @click.stop="handleRemoveLx(lx)">
-          <i class="fas fa-times-circle"></i>
-        </button>
-        <div style="width: 100%"></div>
-        <div v-if="lx.urls && lx.urls.length" class="lx-urls">
-          <pre style="margin: 0">{{ stringifyUrls(lx.urls) }}</pre>
-        </div>
-      </div>
-      <button @click="handleAddLx">+ Add</button>
-    </div>
-    <div style="height: 30px"></div>
+        </th>
+      </tr>
+      <template v-for="row in tableData">
+        <template v-if="row.data.id === editingKey">
+          <tr :key="row.data.id">
+            <td>
+              <span v-if="row.isRoot">根节点</span>
+              <div
+                v-else
+                class="cell"
+                :style="{ 'margin-left': (1 + row.depth) * 15 + 'px' }"
+              >
+                <input v-model="row.data.listName" />
+              </div>
+            </td>
+            <td>
+              <div class="cell">
+                <select
+                  :value="row.data.method"
+                  @change="handleMethodChange(row, $event)"
+                >
+                  <option
+                    v-for="opt in row.isRoot
+                      ? ['table', 'object']
+                      : ['table', 'object', 'text']"
+                    :key="opt"
+                    :value="opt"
+                  >
+                    {{ opt }}
+                  </option>
+                </select>
+              </div>
+            </td>
+            <td>
+              <div class="cell">
+                <input
+                  v-if="!isExpandable(row.data.method)"
+                  v-model="row.data.rawSelector"
+                  @keyup.enter="loadSelector(row.data)"
+                />
+              </div>
+            </td>
+            <td>
+              <button @click="editingKey = ''">save</button>
+              <button @click="extractContent(row)">test</button>
+            </td>
+          </tr>
+          <tr :key="row.data.id + ' '">
+            <td colspan="4">{{ row.data.contents }}</td>
+          </tr>
+        </template>
+        <template v-else>
+          <tr :key="row.data.id" @dblclick="handleEdit(row)">
+            <td>
+              <span v-if="row.isRoot">根节点</span>
+              <span
+                v-else
+                :style="{ 'margin-left': (1 + row.depth) * 15 + 'px' }"
+              >
+                {{ row.data.listName }}
+              </span>
+            </td>
+            <td>{{ row.data.method }}</td>
+            <td>{{ row.data.rawSelector }}</td>
+            <td>
+              <button @click="handleEdit(row)">edit</button>
+              <button v-if="!row.isRoot" @click="handleDelete(row)">
+                delete
+              </button>
+              <button
+                @click="handleAppendChild(row)"
+                v-if="isExpandable(row.data.method)"
+              >
+                append
+              </button>
+            </td>
+          </tr>
+        </template>
+      </template>
+      <tr v-if="false"></tr>
+    </table>
+    <button v-if="!hasTemplate" @click="handleInitTemplate">+</button>
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { v4 as uuidv4 } from "uuid";
+import {
+  clearSelector,
+  loadContentsSelector,
+  extractContent,
+} from "../utils/backend";
+import normalizeTemplate from "../utils/normalizeTemplate";
 import BackendMixin from "./backend-mixin";
-import ModelMixin from "./model-mixin";
+import { mapState } from "vuex";
+
+export const getPathToExtractor = () => {};
+
+const flatNested = (rows, itemArray, depth = 0) => {
+  for (const item of itemArray) {
+    rows.push({ data: item, depth: depth, belong: itemArray });
+    if (item.method === "table" || item.method === "object") {
+      flatNested(rows, item.listData, depth + 1);
+    }
+  }
+};
 
 export default {
-  mixins: [BackendMixin, ModelMixin],
+  mixins: [BackendMixin],
   props: {
-    linksRule: {},
+    template: {},
   },
   computed: {
-    ...mapState({ activelx: "ruleLink", site: "site" }),
-    handlerMapping() {
-      const rules = this.site.rules;
-      return rules.map((r) => ({ name: r.name, id: r.id }));
+    ...mapState(["groupId", "ruleId"]),
+    tableData() {
+      const rows = [];
+      if (this.template) {
+        rows.push({ data: this.template, isRoot: true });
+        flatNested(rows, this.template.listData);
+      }
+      return rows;
+    },
+    hasTemplate() {
+      return !!this.template;
     },
   },
+  data() {
+    return {
+      editingKey: "",
+    };
+  },
   methods: {
-    stringifyUrls(urls) {
-      if (urls.length > 10) {
-        urls = urls.slice(0, 10);
-        urls.push("...");
-      }
-      return urls.join("\n");
+    isExpandable(t) {
+      return t === "table" || t === "object";
     },
-    handleSelectLx(lx) {
-      if (lx === this.activelx) {
-        return;
-      }
-      this.$store.commit("LOAD_RULE_LINK", lx);
-      this.loadSelector(lx.selector);
-    },
-    handleUnselectLx(lx) {
-      if (this.activelx != lx) {
-        return;
-      }
-      this.$store.commit("LOAD_RULE_LINK", null);
-      this.unLoadSelector();
-    },
-    handleAddLx() {
-      this.$store.commit("ADD_RULE_LINK", this.getBaseRuleLinks());
-    },
-    handleConfirmSelector(lx) {
-      this.loadSelector(lx.selector);
-    },
-    handleAddHandler(lx) {
-      const name = window.prompt("Rule Name:");
-      if (name) {
-        const rule = Object.assign(this.getBaseRule(), {
-          name: name,
-          extendUrls: { [lx.id]: lx.urls },
-        });
-        this.$store.commit("ADD_RULE", rule);
-        lx.handler = rule.id;
-      }
-    },
-    handleHandlerChange(lx) {
-      console.log("handler change:", lx);
-      this.$store.dispatch("CHANGE_RULE_LINK_HANDLER", {
-        ruleLinkId: lx.id,
-        handlerId: lx.handler,
-        urls: lx.urls,
+    loadSelector(rowData) {
+      loadContentsSelector({
+        indicator: {
+          groupId: this.groupId,
+          ruleId: this.ruleId,
+          id: rowData.id,
+        },
+        selector: rowData.rawSelector,
       });
     },
-    handleRemoveLx(lx) {
-      this.$store.dispatch("REMOVE_RULE_LINK", lx);
+    extractContent(row) {
+      extractContent({
+        indicator: {
+          groupId: this.groupId,
+          ruleId: this.ruleId,
+          id: row.data.id,
+        },
+        template: normalizeTemplate(row.data),
+      });
     },
+    handleRemoveTemplate() {
+      this.editingKey = "";
+      this.$emit("update:template", null);
+    },
+    handleInitTemplate() {
+      this.$emit("update:template", {
+        id: uuidv4(),
+        isRoot: true,
+        method: "table",
+        rawSelector: "",
+        listData: [],
+        contents: {},
+      });
+    },
+    handleEdit(row) {
+      this.editingKey = row.data.id;
+    },
+    setListData(rowData) {
+      if (this.isExpandable(rowData.method)) {
+        if (rowData.listData === undefined) {
+          this.$set(rowData, "listData", []);
+        }
+      } else {
+        this.$delete(rowData, "listData");
+      }
+    },
+    handleMethodChange(row, e) {
+      const newMethod = e.target.value;
+      if (this.isExpandable(newMethod)) {
+        if (row.data.listData === undefined) {
+          this.$set(row.data, "listData", []);
+        }
+      } else {
+        this.$delete(row.data, "listData");
+      }
+      row.data.method = newMethod;
+    },
+    handleDelete(row) {
+      const idx = row.belong.findIndex((item) => item.id === row.data.id);
+      if (idx >= 0) {
+        row.belong.splice(idx, 1);
+      }
+    },
+    handleAppendChild(row) {
+      const tableItem = row.data;
+      const newItem = {
+        id: uuidv4(),
+        listName: "key",
+        method: "text",
+        rawSelector: "",
+        contents: {},
+      };
+      tableItem.listData.push(newItem);
+      this.$nextTick(() => {
+        for (const r of this.tableData) {
+          if (r.data.id === newItem.id) {
+            this.handleEdit(r);
+            break;
+          }
+        }
+      });
+    },
+  },
+  watch: {
+    editingKey(newVal) {
+      if (newVal) {
+        const row = this.tableData.find((i) => i.data.id === newVal);
+        if (row) {
+          this.loadSelector(row.data);
+        }
+      } else {
+        clearSelector();
+      }
+    },
+  },
+  beforeDestroy() {
+    clearSelector();
   },
 };
 </script>
 
 <style scoped>
-.lx-card {
-  margin-bottom: 10px;
-  padding: 8px;
-  border-radius: 4px;
-  background-color: #eee;
+table,
+th,
+td {
+  border: 1px solid black;
 }
-.lx-card.is-active {
-  background-color: rgba(26, 115, 232, 0.2);
-}
-.lx-column + .lx-column {
-  margin-left: 10px;
-}
-.lx-urls {
+table {
   width: 100%;
-  margin-top: 5px;
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: rgb(245, 245, 245);
+  border-collapse: collapse;
 }
-.lx-card.is-active > .lx-urls {
-  background-color: rgba(255, 255, 255, 0.4);
+.cell {
+  box-sizing: border-box;
+  padding: 5px;
+}
+.cell select,
+.cell input {
+  box-sizing: border-box;
+  width: 100%;
 }
 </style>

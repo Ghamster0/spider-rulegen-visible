@@ -12,5 +12,4 @@ function handlers(onMessage, onDisconnect) {
     port.onMessage.addListener(onMessage)
     port.onDisconnect.addListener(onDisconnect)
 }
-
 initBackend(sendMessage, handlers)

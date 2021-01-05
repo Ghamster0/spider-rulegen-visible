@@ -1,140 +1,168 @@
+import { template } from 'lodash'
 import Vue from 'vue'
 import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+const p = {
+    id: "15615-1135-1-65156102-1sd",
+    name: "Group Default",
+    rules: [
+        {
+            id: "rule_id1",
+            name: "Rule 1",
+            startUrls: ["http://www.baidu.com", "http://www.sogou.com"],
+            example: "http://www.baidu.com",
+            links: [
+                {
+                    id: "" + Math.random(),
+                    name: "下一页",
+                    selector: ".links",
+                    urls: [
+                        "http://www.baidu.com",
+                        "https://www.sogou.com"
+                    ],
+                    handler: ""
+                },
+            ],
+            contentsConf: null
+        }
+    ]
+}
+
+function getRule(state, groupId, ruleId) {
+    const group = state.groups.find(i => i.id === groupId)
+    return group && group.rules.find(i => i.id === ruleId)
+}
+
 export function createStore() {
     const store = new Vuex.Store({
         state: () => ({
-            sites: [],
-            site: {},
+            mode: "multi",
+            groups: [p],
+            group: {},
+            groupId: null,
+            rules: [],
             rule: {},
-            ruleLink: {},
-            ruleContent: {}
+            ruleId: null
         }),
         mutations: {
-            LOAD_SITE(state, p) {
-                state.site = p
-            },
-            ADD_SITE(state, site) {
-                state.sites.push(site)
-            },
-            REMOVE_SITE(state, site) {
-                const index = state.sites.indexOf(site)
-                if (index >= 0) {
-                    state.sites.splice(index, 1)
+            LOAD_GROUP(state, id) {
+                const idx = state.groups.findIndex(i => i.id === id)
+                if (idx >= 0) {
+                    state.groupId = id
+                    state.group = state.groups[idx]
+                    state.rules = state.group.rules
+                } else {
+                    state.groupId = null
+                    state.group = {}
+                    state.rules = []
                 }
             },
-            LOAD_RULE(state, rule) {
-                state.rule = rule
+            PUSH_GROUP(state, group) {
+                state.groups.push(group)
             },
-            ADD_RULE(state, rule) {
-                state.site.rules.push(rule)
+            SPLICE_GROUP(state, id) {
+                const idx = state.groups.findIndex(i => i.id === id)
+                if (idx >= 0) {
+                    state.groups.splice(idx, 1)
+                }
+                console.log(state.groups, idx)
             },
-            REMOVE_RULE(state, rule) {
-                const index = state.site.rules.indexOf(rule)
-                if (index >= 0) {
-                    state.site.rules.splice(index, 1)
+            LOAD_RULE(state, id) {
+                const idx = state.rules.findIndex(i => i.id === id)
+                if (idx >= 0) {
+                    state.rule = state.rules[idx]
+                    state.ruleId = id
+                } else {
+                    state.ruleId = null
+                    state.rule = {}
                 }
             },
-            LOAD_RULE_LINK(state, ruleLink) {
-                state.ruleLink = ruleLink
-            },
-            ADD_RULE_LINK(state, ruleLink) {
-                state.rule.links.push(ruleLink)
-            },
-            REMOVE_RULE_LINK(state, ruleLink) {
-                const index = state.rule.links.indexOf(ruleLink)
-                if (index >= 0) {
-                    state.rule.links.splice(index, 1)
-                }
-            },
-            ADD_RULE_CONTENT(state, content) {
-                state.site.contents.push(content)
-                state.ruleContent = content
-            },
-            SET_RULE_LINK_SELECTOR(state, cssSelector) {
-                state.ruleLink.selector = cssSelector
-            },
-            SET_RULE_LINK_URLS(state, urls) {
-                state.ruleLink.urls = urls
-            },
-            CLEAN_EXTEND_URLS(state, ruleLinkId) {
-                for (const rule of state.site.rules) {
-                    if (rule.extendUrls && rule.extendUrls[ruleLinkId]) {
-                        delete rule.extendUrls[ruleLinkId]
-                        break
+            SET_RULE(state, rule) {
+                const idx = state.rules.findIndex(i => i.id === rule.id)
+                if (idx >= 0) {
+                    state.rules[idx] = { ...state.rules[idx], ...rule }
+                    if (state.rule.id === rule.id) {
+                        state.rule = state.rules[idx]
                     }
                 }
             },
-            SET_EXTEND_URLS(state, { ruleLinkId, handlerId, urls }) {
-                for (const rule of state.site.rules) {
-                    if (rule.id === handlerId) {
-                        if (!rule.extendUrls) {
-                            rule.extendUrls = {}
-                        }
-                        rule.extendUrls[ruleLinkId] = urls
-                        break
+            PUSH_RULE(state, rule) {
+                state.rules.push(rule)
+            },
+            SPLICE_RULE(state, id) {
+                const idx = state.rules.findIndex(i => i.id === id)
+                if (idx >= 0) {
+                    state.rules.splice(idx, 1)
+                    if (state.ruleId === id) {
+                        state.ruleId = null
+                        state.rule = {}
                     }
                 }
             },
-            CLEAN_DEPEND_HANDLERS(state, ruleId) {
-                for (const rule of state.site.rules) {
-                    for (const lx of rule.links) {
-                        if (lx.handler === ruleId) {
-                            lx.handler = ""
+            SET_RULE_LINK(state, { indicator, linkConf }) {
+                console.log(indicator, linkConf)
+                const rule = getRule(state, indicator.groupId, indicator.ruleId)
+                if (rule) {
+                    const lx = rule.links.find(i => i.id === indicator.id)
+                    if (lx) {
+                        Object.assign(lx, linkConf)
+                    }
+                }
+            },
+            SET_RULE_EXTRACT(state, { indicator, templatePatch }) {
+                const rule = getRule(state, indicator.groupId, indicator.ruleId)
+
+                function recursionFind(item, id) {
+                    if (item.id === id)
+                        return item
+                    if (item.listData) {
+                        for (const childItem of item.listData) {
+                            const res = recursionFind(childItem, id)
+                            if (res)
+                                return res
                         }
+                    }
+                    return null
+                }
+
+                if (rule) {
+                    const item = recursionFind(rule.contentsConf, indicator.id)
+                    console.log(item)
+                    if (item) {
+                        if (templatePatch.selector) {
+                            templatePatch.rawSelector = templatePatch.selector
+                        }
+                        Object.assign(item, templatePatch)
                     }
                 }
             }
         },
         actions: {
-            ADD_SITE({ commit }, site) {
-                commit("ADD_SITE", site)
-                commit("LOAD_SITE", site)
-            },
-            REMOVE_SITE({ commit, state }, site) {
-                commit("REMOVE_SITE", site)
-                if (state.site === site) {
-                    commit("LOAD_SITE", {})
-                    commit("LOAD_RULE", {})
+            selectGroup({ commit, state }, id) {
+                if (state.groupId !== id) {
+                    this.dispatch("selectRule", null)
+                    commit("LOAD_GROUP", id)
                 }
             },
-            ADD_RULE({ commit }, rule) {
-                commit("ADD_RULE", rule)
-                commit("LOAD_RULE", rule)
-            },
-            REMOVE_RULE({ commit, state }, rule) {
-                commit("CLEAN_DEPEND_HANDLERS", rule.id)
-                if (state.rule === rule) {
-                    commit("LOAD_RULE_LINK", {})
-                    commit("LOAD_RULE", {})
+            deleteGroup({ commit, state }, id) {
+                commit("SPLICE_GROUP", id)
+                if (state.groupId === id) {
+                    commit("LOAD_GROUP", null)
                 }
-                for (const r of rule.links) {
-                    commit("CLEAN_EXTEND_URLS", r.id)
+            },
+            selectRule({ commit, state }, id) {
+                if (state.rule.id !== id) {
+                    commit("LOAD_RULE", id)
                 }
-                commit("REMOVE_RULE", rule)
             },
-            ADD_RULE_LINK({ commit }, ruleLink) {
-                commit("ADD_RULE_LINK", ruleLink)
-                commit("LOAD_RULE_LINK", ruleLink)
+            deleteRule({ commit, state }, id) {
+                commit("SPLICE_RULE", id)
+                if (state.ruleId === id) {
+                    commit("LOAD_RULE", null)
+                }
             },
-            REMOVE_RULE_LINK({ commit }, ruleLink) {
-                commit("CLEAN_EXTEND_URLS", ruleLink.id)
-                commit("REMOVE_RULE_LINK", ruleLink)
-                commit("LOAD_RULE_LINK", {})
-            },
-            CHANGE_RULE_LINK_HANDLER({ commit }, { ruleLinkId, handlerId, urls }) {
-                commit("CLEAN_EXTEND_URLS", ruleLinkId)
-                commit("SET_EXTEND_URLS", { ruleLinkId, handlerId, urls })
-
-            },
-            UPDATE_RULE_LINK_EXTRACTED({ state, commit }, urls) {
-                const ruleLink = state.ruleLink
-                commit("SET_RULE_LINK_URLS", urls)
-                commit("CLEAN_EXTEND_URLS", ruleLink.id)
-                commit("SET_EXTEND_URLS", { ruleLinkId: ruleLink.id, handlerId: ruleLink.handler, urls })
-            }
         }
     })
     return store

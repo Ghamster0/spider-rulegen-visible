@@ -2,7 +2,9 @@
   <div id="app" style="height: 100vh; width: 100%">
     <col-split>
       <template v-slot:left>
-        <sider></sider>
+        <!-- sider -->
+        <groups></groups>
+        <rules></rules>
       </template>
       <template v-slot:right>
         <rule-editor></rule-editor>
@@ -30,14 +32,16 @@ import { cloneDeep } from "lodash";
 
 import ColSplit from "./components/ColSplit.vue";
 import RuleEditor from "./views/RuleEditor.vue";
-import Sider from "./views/Sider.vue";
-import { download } from "./utils";
+import Groups from "./views/Groups.vue";
+import Rules from "./views/Rules.vue";
+import { download } from "./utils/utils";
 
 export default {
   name: "App",
   components: {
     ColSplit,
-    Sider,
+    Groups,
+    Rules,
     RuleEditor,
   },
   methods: {
@@ -46,7 +50,7 @@ export default {
     },
     handleDownload() {
       // filter urls too long
-      const sites = cloneDeep(this.$store.state.sites);
+      const sites = cloneDeep(this.$store.state.groups);
       for (const site of sites) {
         for (const rule of site.rules) {
           if (rule.extendUrls) {

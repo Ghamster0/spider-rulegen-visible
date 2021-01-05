@@ -1,14 +1,14 @@
 <template>
-  <div style="height: 100%; overflow: scroll; padding: 5px">
-    <span style="margin-bottom: 5px; display: block">Links</span>
-    <div class="rules">
+  <div style="height: 100%; padding: 5px">
+    <span style="margin-bottom: 5px; display: block">Link Rules</span>
+    <div class="rules" style="height: 100%">
       <div
-        v-for="lx in linksRule"
+        v-for="lx in linksConf"
         :key="lx.id"
         class="lx-card d-flex"
-        :class="{ 'is-active': lx === activelx }"
-        @click="handleSelectLx(lx)"
-        v-click-outside="() => handleUnselectLx(lx)"
+        :class="{ 'is-active': lx.id === activeId }"
+        @click.stop="handleSelect(lx)"
+        v-click-outside="() => handleUnselect(lx)"
       >
         <div class="lx-column">
           <input v-model="lx.name" placeholder="name" />
@@ -17,101 +17,122 @@
           <input
             v-model="lx.selector"
             placeholder="css selector"
-            @keydown.enter="handleConfirmSelector(lx)"
+            @keydown.enter="loadSelector(lx)"
           />
         </div>
         <div class="lx-column">
           <span style="margin-right: 5px">handler</span>
-          <select v-model="lx.handler" @change="handleHandlerChange(lx)">
-            <option v-for="h in handlerMapping" :key="h.id" :value="h.id">
-              {{ h.name }}({{ h.id }})
+          <select
+            :value="lx.handler"
+            @change="handleHandlerChange($event.target.value, lx)"
+          >
+            <option v-for="h in handlerOptions" :key="h.id" :value="h.id">
+              {{ h.name }} - {{ h.id.substring(0, 8) }}
             </option>
           </select>
           <button class="text-btn" @click="handleAddHandler(lx)">
             <i class="fas fa-plus"></i>
           </button>
         </div>
-        <button class="text-btn ml-auto" @click.stop="handleRemoveLx(lx)">
-          <i class="fas fa-times-circle"></i>
-        </button>
         <div style="width: 100%"></div>
         <div v-if="lx.urls && lx.urls.length" class="lx-urls">
-          <pre style="margin: 0">{{ stringifyUrls(lx.urls) }}</pre>
+          <pre style="margin: 0">{{ lx.urls.join("\n") }}</pre>
         </div>
       </div>
-      <button @click="handleAddLx">+ Add</button>
+      <button @click="handleAdd">+ Add</button>
     </div>
-    <div style="height: 30px"></div>
   </div>
 </template>
 
 <script>
 import { mapState } from "vuex";
+import { v4 as uuidv4 } from "uuid";
 import BackendMixin from "./backend-mixin";
-import ModelMixin from "./model-mixin";
+import { clearSelector, loadUrlsSelector } from "../utils/backend";
+
+function getDefaultRule() {
+  return {
+    id: uuidv4(),
+    name: "",
+    example: "",
+    links: [],
+    extractors: [],
+  };
+}
+
+function getDefaultLx() {
+  return {
+    id: uuidv4(),
+    name: "",
+    selector: "",
+    urls: [],
+    handler: "",
+  };
+}
 
 export default {
-  mixins: [BackendMixin, ModelMixin],
+  mixins: [BackendMixin],
   props: {
-    linksRule: {},
+    linksConf: Array,
+  },
+  data() {
+    return { activeId: "", extendUrls: [] };
   },
   computed: {
-    ...mapState({ activelx: "ruleLink", site: "site" }),
-    handlerMapping() {
-      const rules = this.site.rules;
-      return rules.map((r) => ({ name: r.name, id: r.id }));
+    ...mapState(["group", "groupId", "ruleId"]),
+    handlerOptions() {
+      return this.group.rules.map((r) => ({ name: r.name, id: r.id }));
     },
   },
   methods: {
-    stringifyUrls(urls) {
-      if (urls.length > 10) {
-        urls = urls.slice(0, 10);
-        urls.push("...");
+    loadSelector(row) {
+      loadUrlsSelector({
+        indicator: { groupId: this.groupId, ruleId: this.ruleId, id: row.id },
+        selector: row.selector,
+      });
+    },
+    handleSelect(lx) {
+      if (lx.id !== this.activeId) {
+        this.activeId = lx.id;
       }
-      return urls.join("\n");
     },
-    handleSelectLx(lx) {
-      if (lx === this.activelx) {
-        return;
+    handleUnselect(lx) {
+      if (lx.id === this.activeId) {
+        this.activeId = "";
       }
-      this.$store.commit("LOAD_RULE_LINK", lx);
-      this.loadSelector(lx.selector);
     },
-    handleUnselectLx(lx) {
-      if (this.activelx != lx) {
-        return;
-      }
-      this.$store.commit("LOAD_RULE_LINK", null);
-      this.unLoadSelector();
-    },
-    handleAddLx() {
-      this.$store.commit("ADD_RULE_LINK", this.getBaseRuleLinks());
-    },
-    handleConfirmSelector(lx) {
-      this.loadSelector(lx.selector);
+    handleAdd() {
+      this.linksConf.push(getDefaultLx());
     },
     handleAddHandler(lx) {
       const name = window.prompt("Rule Name:");
       if (name) {
-        const rule = Object.assign(this.getBaseRule(), {
-          name: name,
-          extendUrls: { [lx.id]: lx.urls },
-        });
-        this.$store.commit("ADD_RULE", rule);
+        const rule = { ...getDefaultRule(), name: name };
+        this.$store.commit("PUSH_RULE", rule);
         lx.handler = rule.id;
       }
     },
-    handleHandlerChange(lx) {
-      console.log("handler change:", lx);
-      this.$store.dispatch("CHANGE_RULE_LINK_HANDLER", {
-        ruleLinkId: lx.id,
-        handlerId: lx.handler,
-        urls: lx.urls,
+    handleHandlerChange(handler, lx) {
+      this.$store.commit("SET_RULE_LINK", {
+        indicate: { groupId: this.groupId, ruleId: this.ruleId, id: lx.id },
+        linkConf: { handler: handler },
       });
     },
-    handleRemoveLx(lx) {
-      this.$store.dispatch("REMOVE_RULE_LINK", lx);
+  },
+  watch: {
+    activeId(newVal) {
+      if (newVal) {
+        const lx = this.linksConf.find((i) => i.id === newVal);
+        if (lx) {
+          this.loadSelector(lx);
+        }
+      } else {
+        clearSelector();
+      }
     },
+  },
+  beforeDestroy() {
+    clearSelector();
   },
 };
 </script>
@@ -119,7 +140,7 @@ export default {
 <style scoped>
 .lx-card {
   margin-bottom: 10px;
-  padding: 8px;
+  padding: 5px;
   border-radius: 4px;
   background-color: #eee;
 }

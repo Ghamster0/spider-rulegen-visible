@@ -36,7 +36,7 @@ DomPredictionHelper.prototype.recursiveNodes = function (e) {
 DomPredictionHelper.prototype.escapeCssNames = function (name) {
     if (name) {
         try {
-            return name.replace(/\bselectorgadget_\w+\b/g, '').replace(/\\/g, '\\\\').replace(/[\#\;\&\,\.\+\*\~\'\:\"\!\^\$\[\]\(\)\=\>\|\/]/g, function (e) {
+            return name.replace(/\bselectorgadget_\w+\b/g, '').replace(/^[^a-zA-Z].*$/, '').replace(/\\/g, '\\\\').replace(/[\#\;\&\,\.\+\*\~\'\:\"\!\^\$\[\]\(\)\=\>\|\/]/g, function (e) {
                 return '\\' + e;
             }).replace(/\s+/, '');
         } catch (e) {
@@ -88,19 +88,19 @@ DomPredictionHelper.prototype.pathOf = function (elem) {
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         e = _ref[_i];
         if (e) {
-            siblings = this.siblingsWithoutTextNodes(e);
-            if (e.nodeName.toLowerCase() !== "body") {
-                j = siblings.length - 2 < 0 ? 0 : siblings.length - 2;
-                while (j < siblings.length) {
-                    if (siblings[j] === e) {
-                        break;
-                    }
-                    if (!siblings[j].nodeName.match(/^(script|#.*?)$/i)) {
-                        path += this.cssDescriptor(siblings[j]) + (j + 1 === siblings.length ? "+ " : "~ ");
-                    }
-                    j++;
-                }
-            }
+            // siblings = this.siblingsWithoutTextNodes(e);
+            // if (e.nodeName.toLowerCase() !== "body") {
+            //     j = siblings.length - 2 < 0 ? 0 : siblings.length - 2;
+            //     while (j < siblings.length) {
+            //         if (siblings[j] === e) {
+            //             break;
+            //         }
+            //         if (!siblings[j].nodeName.match(/^(script|#.*?)$/i)) {
+            //             path += this.cssDescriptor(siblings[j]) + (j + 1 === siblings.length ? "+ " : "~ ");
+            //         }
+            //         j++;
+            //     }
+            // }
             path += this.cssDescriptor(e) + " > ";
         }
     }
@@ -108,14 +108,30 @@ DomPredictionHelper.prototype.pathOf = function (elem) {
 };
 
 DomPredictionHelper.prototype.cssDescriptor = function (node) {
+    // var path, sibs, sibPath, _i, _len;
+    // path = this.simpleCssDescriptor(node);
+    // sibs = this.allSiblingsWithoutTextNodes(node);
+    // _len = sibs.length;
+    // if (_len > 0) {
+    //     if (path.split(/[.#]/).length < 2) {
+    //         return path += ':nth-child(' + (this.childElemNumber(node) + 1) + ')';
+    //     }
+    //     for (_i = 0, _len = sibs.length; _i < _len; _i++) {
+    //         sibPath = this.simpleCssDescriptor(sibs[_i]);
+    //         if (sibPath === path) {
+    //             return path += ':nth-child(' + (this.childElemNumber(node) + 1) + ')';
+    //         }
+    //     }
+    // }
+    // return path;
     var cssName, escaped, path, _i, _len, _ref;
     path = node.nodeName.toLowerCase();
-    escaped = node.id && this.escapeCssNames(new String(node.id));
+    escaped = node.id && this.escapeCssNames(node.id + '');
     if (escaped && escaped.length > 0) {
         path += '#' + escaped;
     }
     if (node.className) {
-        _ref = node.className.split(" ");
+        _ref = node.className.split(/\s+/);
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             cssName = _ref[_i];
             escaped = this.escapeCssNames(cssName);
@@ -130,6 +146,40 @@ DomPredictionHelper.prototype.cssDescriptor = function (node) {
     return path;
 };
 
+DomPredictionHelper.prototype.simpleCssDescriptor = function (node) {
+    var cssName, escaped, path, _i, _len, _ref;
+    path = node.nodeName.toLowerCase();
+    escaped = node.id && this.escapeCssNames(new String(node.id));
+    if (escaped && escaped.length > 0) {
+        return path + '#' + escaped;
+    }
+    if (node.className) {
+        _ref = node.className.split(" ").sort();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            cssName = _ref[_i];
+            escaped = this.escapeCssNames(cssName);
+            if (cssName && escaped.length > 0) {
+                path += '.' + escaped;
+            }
+        }
+    }
+    return path;
+};
+
+DomPredictionHelper.prototype.allSiblingsWithoutTextNodes = function (e) {
+    var filtered_nodes, node, nodes, _i, _len;
+    nodes = e.parentNode.childNodes;
+    filtered_nodes = [];
+    for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+        node = nodes[_i];
+        if (node.nodeName.substring(0, 1) === "#" || node === e) {
+            continue;
+        }
+        filtered_nodes.push(node);
+    }
+    return filtered_nodes;
+};
+
 DomPredictionHelper.prototype.cssDiff = function (array) {
     var collective_common, cssElem, diff, dmp, encoded_css_array, existing_tokens, part, _i, _j, _len, _len1;
     try {
@@ -139,6 +189,16 @@ DomPredictionHelper.prototype.cssDiff = function (array) {
     }
     if (typeof array === 'undefined' || array.length === 0) {
         return '';
+    }
+    if (array.length > 1) {
+        var arrArr = [], minLength = 100000;
+        for (var ii = 0; ii < array.length; ii++) {
+            arrArr[ii] = array[ii].trim().split(/\s*>\s*/);
+            minLength = minLength > arrArr[ii].length ? arrArr[ii].length : minLength;
+        }
+        for (var ii = 0; ii < array.length; ii++) {
+            array[ii] = arrArr[ii].slice(0, minLength).join(' > ');
+        }
     }
     existing_tokens = {};
     encoded_css_array = this.encodeCssForDiff(array, existing_tokens);
@@ -393,7 +453,21 @@ DomPredictionHelper.prototype.cleanCss = function (css) {
     last_cleaned_css = null;
     while (last_cleaned_css !== cleaned_css) {
         last_cleaned_css = cleaned_css;
-        cleaned_css = cleaned_css.replace(/(^|\s+)(\+|\~)/, '').replace(/(\+|\~)\s*$/, '').replace(/>/g, ' > ').replace(/\s*(>\s*)+/g, ' > ').replace(/,/g, ' , ').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '').replace(/\s*,$/g, '').replace(/^\s*,\s*/g, '').replace(/\s*>$/g, '').replace(/^>\s*/g, '').replace(/[\+\~\>]\s*,/g, ',').replace(/[\+\~]\s*>/g, '>').replace(/\s*(,\s*)+/g, ' , ');
+        cleaned_css = cleaned_css.replace(/(^|\s+)(\+|\~)/, '')
+            .replace(/(\+|\~)\s*$/, '')
+            .replace(/>/g, ' > ')
+            .replace(/>\s*(?=>)/g, ' > * ')
+            .replace(/\s*(>\s*)+/g, ' > ')
+            .replace(/,/g, ' , ')
+            .replace(/\s+/g, ' ')
+            .replace(/^\s+|\s+$/g, '')
+            .replace(/\s*,$/g, '')
+            .replace(/^\s*,\s*/g, '')
+            .replace(/\s*>$/g, '')
+            .replace(/^>\s*/g, '')
+            .replace(/[\+\~\>]\s*,/g, ',')
+            .replace(/[\+\~]\s*>/g, '>')
+            .replace(/\s*(,\s*)+/g, ' , ');
     }
     return cleaned_css;
 };
@@ -411,23 +485,178 @@ DomPredictionHelper.prototype.getPathsFor = function (nodeset) {
 };
 
 DomPredictionHelper.prototype.predictCss = function (s, r) {
-    var css, selected, selected_paths, simplest, union, _i, _len;
     if (s.length === 0) {
         return '';
     }
-    selected_paths = this.getPathsFor(s);
-    css = this.cssDiff(selected_paths);
-    simplest = this.simplifyCss(css, s, r);
-    if (simplest.length > 0) {
-        return simplest;
+    var selected_paths = this.getPathsFor(s);
+    var cssSelector = this.cssDiff(selected_paths);
+    // return cssSelector;
+    var cssItemList = cssSelector.trim().split(/\s*>\s*/);
+    if (r && r.length > 0) {
+        for (var k = 0; k < r.length; k++) {
+            var selected_paths2 = this.getPathsFor([r[k]]);
+            var cssSelector2 = this.cssDiff(selected_paths2);
+            var cssItemList2 = cssSelector2.trim().split(/\s*>\s*/);
+            var not = '';
+            for (var i = cssItemList.length - 1; i >= 0; i--) {
+                var item1 = cssItemList[i];
+                var item2 = cssItemList2[i];
+                if (item2 && item2 !== item1) {
+                    var pt1 = item1.match(this.breakCssPattern);
+                    var pt2 = item2.match(this.breakCssPattern);
+                    var allNot = pt1[5] || '';
+                    if (pt2[1] && (!pt1[1] || pt1[1] !== pt2[1])) {
+                        if (allNot.indexOf(':not(' + pt2[1] + ')') === -1) {
+                            not += ':not(' + pt2[1] + ')';
+                        }
+                    }
+                    if (not) {
+                        cssItemList[i] = item1 + not;
+                        break;
+                    }
+                }
+            }
+            if (!not) {
+                for (var i = cssItemList.length - 1; i >= 0; i--) {
+                    var item1 = cssItemList[i];
+                    var item2 = cssItemList2[i];
+                    if (item2 && item2 !== item1) {
+                        var pt1 = item1.match(this.breakCssPattern);
+                        var pt2 = item2.match(this.breakCssPattern);
+                        var allNot = pt1[5] || '';
+                        if (pt2[3] && (!pt1[3] || pt1[3].indexOf(pt2[3]) === -1)) {
+                            var classList = pt2[3].split('.');
+                            for (var n = 0; n < classList.length; n++) {
+                                if (classList[n]) {
+                                    var itemClass = '.' + classList[n];
+                                    var icReg = new RegExp('\\.' + classList[n] + '((?=\\.)|$)');
+                                    if (!pt1[3] || !icReg.test(pt1[3])) {
+                                        if (allNot.indexOf(':not(' + itemClass + ')') === -1) {
+                                            not += ':not(' + itemClass + ')';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (not) {
+                            cssItemList[i] = item1 + not;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!not) {
+                for (var i = cssItemList.length - 1; i >= 0; i--) {
+                    var item1 = cssItemList[i];
+                    var item2 = cssItemList2[i];
+                    if (item2 && item2 !== item1) {
+                        var pt1 = item1.match(this.breakCssPattern);
+                        var pt2 = item2.match(this.breakCssPattern);
+                        var allNot = pt1[5] || '';
+                        if (pt2[1] && (!pt1[1] || pt1[1] !== pt2[1])) {
+                            if (allNot.indexOf(':not(' + pt2[1] + ')') === -1) {
+                                not += ':not(' + pt2[1] + ')';
+                            }
+                        }
+                        if (not) {
+                            cssItemList[i] = item1 + not;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!not) {
+                for (var i = cssItemList.length - 1; i >= 0; i--) {
+                    var item1 = cssItemList[i];
+                    var item2 = cssItemList2[i];
+                    if (item2 && item2 !== item1) {
+                        var pt1 = item1.match(this.breakCssPattern);
+                        var pt2 = item2.match(this.breakCssPattern);
+                        var allNot = pt1[5] || '';
+                        if (pt2[4] && (!pt1[4] || pt1[4] !== pt2[4])) {
+                            if (allNot.indexOf(':not(' + pt2[4] + ')') === -1) {
+                                not += ':not(' + pt2[4] + ')';
+                            }
+                        }
+                        if (not) {
+                            cssItemList[i] = item1 + not;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
-    union = '';
-    for (_i = 0, _len = s.length; _i < _len; _i++) {
-        selected = s[_i];
-        union = this.pathOf(selected) + ", " + union;
+    return this.simplifyCss2(cssItemList);
+
+    // var css, selected, selected_paths, simplest, union, _i, _len;
+    // if (s.length === 0) {
+    //     return '';
+    // }
+    // selected_paths = this.getPathsFor(s);
+    // css = this.cssDiff(selected_paths);
+    // simplest = this.simplifyCss(css, s, r);
+    // if (simplest.length > 0) {
+    //     return simplest;
+    // }
+    // union = '';
+    // for (_i = 0, _len = s.length; _i < _len; _i++) {
+    //     selected = s[_i];
+    //     union = this.pathOf(selected) + ", " + union;
+    // }
+    // union = this.cleanCss(union);
+    // return this.simplifyCss(union, s, r);
+};
+
+DomPredictionHelper.prototype.breakCssPattern = /^([^#.:]+)?(#[^#.:]+)?((?:\.[^#.:]+)+)?(:nth-child\(\d+\))?((?::not\(.+\))+)?/i;
+
+DomPredictionHelper.prototype.simplifyCss2 = function (cssItemList) {
+    for (var i = cssItemList.length; i > 1; i--) {
+        var subCss = cssItemList.slice(0, i).join(' > ');
+        var cssItem = cssItemList[i - 1];
+        var itemList = cssItem.match(this.breakCssPattern);
+        var tag = itemList[1] || '';
+        var id = itemList[2] || '';
+        var className = itemList[3] || '';
+        var nth = itemList[4] || '';
+        var not = itemList[5] || '';
+        var allCss = tag + id + className + nth;
+        var domList = document.querySelectorAll(subCss);
+        for (var j = 0, len = domList.length; j < len; j++) {
+            var pNode = domList[j].parentNode;
+            var pCount = this.queryChildSelectorCount(pNode, allCss);
+            if (id) {
+                if (pCount !== this.queryChildSelectorCount(pNode, id)) {
+                    id = '';
+                }
+            }
+            if (className) {
+                if (pCount !== this.queryChildSelectorCount(pNode, className)) {
+                    className = '';
+                }
+            }
+            if (tag) {
+                if (pCount !== this.queryChildSelectorCount(pNode, tag)) {
+                    tag = '';
+                }
+            }
+        }
+        cssItem = id || className || tag || allCss;
+        cssItemList[i - 1] = cssItem + not;
     }
-    union = this.cleanCss(union);
-    return this.simplifyCss(union, s, r);
+    return cssItemList.slice(1).join(' > ');
+};
+
+DomPredictionHelper.prototype.queryChildSelectorCount = function (pNode, selector) {
+    var nodes = pNode.children;
+    var count = 0;
+    for (var i = 0, len = nodes.length; i < len; i++) {
+        var node = nodes[i];
+        if (node.nodeType === 1 && node.matches(selector)) {
+            count++;
+        }
+    }
+    return count;
 };
 
 DomPredictionHelper.prototype.selectorGets = function (type, list, the_selector) {

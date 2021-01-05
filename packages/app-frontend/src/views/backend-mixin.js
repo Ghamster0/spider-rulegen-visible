@@ -1,27 +1,23 @@
+function sendBackend(msgBody) {
+    window.bridge.emit("msg-to-backend", msgBody)
+}
+
 export default {
     methods: {
         loadSelector(cssSelector) {
-            window.bridge.emit("msg-to-backend", {
+            sendBackend({
                 type: "selector:load",
-                value: cssSelector,
-            });
+                value: cssSelector
+            })
         },
         unLoadSelector() {
-            window.bridge.emit("msg-to-backend", {
-                type: "selector:deactive",
-            });
+            sendBackend({ type: "selector:deactive" })
         },
         goto(href) {
-            window.bridge.emit("msg-to-backend", {
+            sendBackend({
                 type: "location:href",
                 value: href,
-            });
-        },
-        extractUrls(cssSelector) {
-            window.bridge.emit("msg-to-backend", {
-                type: "extract:urls",
-                value: cssSelector,
-            });
+            })
         }
     }
 }
