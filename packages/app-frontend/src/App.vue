@@ -20,9 +20,12 @@
       <button class="circle primary" @click="logg">
         <i class="fas fa-bug"></i>
       </button>
-      <!-- <button class="circle primary" @click="test">
-        <i class="fas fa-bug"></i>
-      </button> -->
+      <button class="circle primary" @click="loadFromDatabus">
+        <i class="fas fa-search"></i>
+      </button>
+      <button class="circle primary" @click="setBackToDatabus">
+        <i class="fas fa-file-export"></i>
+      </button>
     </div>
   </div>
 </template>
@@ -35,6 +38,7 @@ import RuleEditor from "./views/RuleEditor.vue";
 import Groups from "./views/Groups.vue";
 import Rules from "./views/Rules.vue";
 import { download } from "./utils/utils";
+import { sendToDatabus } from "./utils/backend";
 
 export default {
   name: "App",
@@ -43,6 +47,11 @@ export default {
     Groups,
     Rules,
     RuleEditor,
+  },
+  data() {
+    return {
+      opTabId: "",
+    };
   },
   methods: {
     logg() {
@@ -59,8 +68,8 @@ export default {
               rule.extendUrls[key].push("...");
             }
           }
-          for (const link of rule.links) {
-            if (link.urls.length > 5) {
+          for (const link of rule.linksConf) {
+            if (link.urls && link.urls.length > 5) {
               link.urls = link.urls.slice(0, 5);
               link.urls.push("...");
             }
@@ -69,15 +78,44 @@ export default {
       }
       download("rules.json", JSON.stringify(sites, null, 2));
     },
-    test() {
-      chrome.tabs.query({ active: true }, function (tabs) {
-        console.log(tabs);
-      });
-      chrome.tabs.query({}, function (tabs) {
-        console.log(tabs);
-        chrome.tabs.update(tabs[0].id, { active: true }, (tab) => {});
+    loadFromDatabus() {
+      chrome.tabs.query({}, (tabs) => {
+        for (const tab of tabs) {
+          if (tab.url.match(/crawl\/.+\/config/)) {
+            this.opTabId = tab.id;
+            sendToDatabus({ cmd: "query" }, tab.id);
+            chrome.tabs.executeScript(tab.id, {
+              code: `
+              if(!window.RULEGEN_INITED){
+                window.RULEGEN_INITED=true
+                chrome.runtime.onMessage.addListener(function(request){
+                  if(request.type==="rulegen-to-databus"){
+                    window.postMessage(request)
+                  }
+                })
+                window.addEventListener("message", e=>{
+                  if(e.data.type==="databus-to-rulegen"){
+                    chrome.runtime.sendMessage(e.data)
+                  }
+                })
+              }
+              `,
+            });
+            sendToDatabus({ type: "query" }, tab.id);
+          }
+        }
       });
     },
+    setBackToDatabus() {
+      sendToDatabus(
+        { type: "set", data: this.$store.state.groups },
+        this.opTabId
+      );
+      chrome.tabs.update(this.opTabId, { active: true });
+    },
+  },
+  created() {
+    window.addEventListener("message", (e) => console.log(e));
   },
 };
 </script>

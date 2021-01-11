@@ -10,6 +10,7 @@ chrome.runtime.onConnect.addListener(port => {
         tab = port.name
         name = 'devtools'
         injectBackend(+port.name)
+        connectToDatabus(port)
     } else {
         tab = port.sender.tab.id
         name = 'backend'
@@ -70,3 +71,23 @@ function doublePipe(id, one, two) {
     two.onDisconnect.addListener(shutdown)
     console.log('tab ' + id + ' connected.')
 }
+
+function connectToDatabus(port) {
+    function handler(msg) {
+        if (msg.type === "rulegen-to-databus") {
+            msg.portId = port.name
+            chrome.tabs.sendMessage(msg.data.tabId, msg)
+        }
+    }
+    port.onMessage.addListener(handler)
+    port.onDisconnect.addListener(() => port.onMessage.removeListener(handler))
+}
+
+chrome.runtime.onMessage.addListener(function (request) {
+    if (request.type === "databus-to-rulegen") {
+        if (ports[request.portId]) {
+            const port = ports[request.portId]["devtools"]
+            port.postMessage(request)
+        }
+    }
+})

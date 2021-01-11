@@ -21,7 +21,6 @@ Vue.directive('click-outside', {
     }
 })
 
-
 const store = createStore()
 
 export function initApp(bridge, id) {
@@ -34,6 +33,7 @@ export function initApp(bridge, id) {
             case "selector-predict:urls":
                 store.commit("SET_RULE_LINK", { indicator: msgBody.indicator, linkConf: { selector: msgBody.selector } })
                 extractUrls(msgBody.indicator, msgBody.selector)
+                break
             case "selector-predict:contents":
                 store.commit("SET_RULE_EXTRACT", { indicator: msgBody.indicator, templatePatch: { selector: msgBody.selector } })
                 break
@@ -44,6 +44,14 @@ export function initApp(bridge, id) {
                 store.commit("SET_RULE_EXTRACT", { indicator: msgBody.indicator, templatePatch: { contents: msgBody.contents } })
         }
     });
+
+    bridge.on("databus-to-rulegen", e => {
+        console.log("databus -> rulegen", e)
+        if (window.confirm("从Databus平台导入配置？")) {
+            store.commit("SET_GROUPS", e.rules)
+            store.commit("LOAD_GROUP", "")
+        }
+    })
 
     new Vue({
         store,

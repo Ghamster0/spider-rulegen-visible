@@ -9,12 +9,17 @@ function createBridge() {
 
     function listenPort(port) {
         let disConnected = false
-        port.onMessage.addListener(msg => emitter.oldEmit.apply(emitter, ['msg-from-backend', msg]))
+        port.onMessage.addListener(msg => {
+            if (msg.type === "msg-from-backend" || msg.type === "databus-to-rulegen") {
+                emitter.oldEmit.apply(emitter, [msg.type, msg.data])
+            }
+        })
         port.onDisconnect.addListener(() => { disConnected = true })
 
         emitter.emit = function () {
-            if (arguments[0] === 'msg-to-backend') {
-                !disConnected && port.postMessage(arguments[1])
+            const args = arguments
+            if (args[0] === 'msg-to-backend' || args[0] === 'rulegen-to-databus') {
+                !disConnected && port.postMessage({ type: args[0], data: args[1] })
             } else {
                 emitter.oldEmit.apply(emitter, arguments)
             }

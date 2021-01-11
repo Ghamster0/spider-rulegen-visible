@@ -47,7 +47,6 @@
 <script>
 import { mapState } from "vuex";
 import { v4 as uuidv4 } from "uuid";
-import BackendMixin from "./backend-mixin";
 import { clearSelector, loadUrlsSelector } from "../utils/backend";
 
 function getDefaultRule() {
@@ -71,7 +70,6 @@ function getDefaultLx() {
 }
 
 export default {
-  mixins: [BackendMixin],
   props: {
     linksConf: Array,
   },

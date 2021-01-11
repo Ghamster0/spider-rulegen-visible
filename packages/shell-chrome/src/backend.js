@@ -5,7 +5,7 @@ const port = chrome.runtime.connect({
 })
 
 function sendMessage(msg) {
-    port.postMessage(msg)
+    port.postMessage({ type: "msg-from-backend", data: msg })
 }
 
 function handlers(onMessage, onDisconnect) {

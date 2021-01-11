@@ -108,7 +108,6 @@ import {
   extractContent,
 } from "../utils/backend";
 import normalizeTemplate from "../utils/normalizeTemplate";
-import BackendMixin from "./backend-mixin";
 import { mapState } from "vuex";
 
 export const getPathToExtractor = () => {};
@@ -123,7 +122,6 @@ const flatNested = (rows, itemArray, depth = 0) => {
 };
 
 export default {
-  mixins: [BackendMixin],
   props: {
     template: {},
   },

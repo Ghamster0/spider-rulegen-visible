@@ -45,7 +45,6 @@
 
 <script>
 import AppDialog from "../components/Dialog.vue";
-import ModelMixin from "./model-mixin";
 import { mapState } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 
@@ -61,7 +60,6 @@ export default {
   components: {
     AppDialog,
   },
-  mixins: [ModelMixin],
   computed: {
     ...mapState(["groups", "groupId"]),
     activeGroupId: {

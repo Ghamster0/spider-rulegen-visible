@@ -38,7 +38,7 @@
     </div>
     <link-extractor
       v-if="active === '提链'"
-      :linksConf="rule.links"
+      :linksConf="rule.linksConf"
     ></link-extractor>
     <content-extractor
       v-if="active === '抽取'"
@@ -49,11 +49,11 @@
 
 <script>
 import AppTab from "../components/Tab.vue";
-import BackendMixin from "./backend-mixin";
-import LinkExtractor from "./LinkExtractor.vue";
+import LinkExtractor from "./links/LinkExtractor.vue";
 import ContentExtractor from "./ContentExtractor.vue";
 
 import { mapState } from "vuex";
+import { gotoPage } from "../utils/backend";
 
 export default {
   components: {
@@ -61,7 +61,6 @@ export default {
     LinkExtractor,
     ContentExtractor,
   },
-  mixins: [BackendMixin],
   data() {
     return {
       exampleMode: "select",
@@ -73,7 +72,7 @@ export default {
     extendUrls() {
       let urls = [];
       for (const r of this.rules) {
-        for (const lx of r.links) {
+        for (const lx of r.linksConf) {
           if (lx.handler === this.ruleId && lx.urls) {
             urls = urls.concat(lx.urls);
           }
@@ -98,7 +97,7 @@ export default {
   methods: {
     handleNavgation() {
       if (this.rule.example) {
-        this.goto(this.rule.example);
+        gotoPage(this.rule.example);
       }
     },
   },

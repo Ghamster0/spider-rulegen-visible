@@ -24,7 +24,7 @@ export function clearSelector() {
 }
 
 
-export function goto(href) {
+export function gotoPage(href) {
     window.bridge.emit("msg-to-backend", {
         type: "location:href",
         value: href,
@@ -38,4 +38,9 @@ export function extractUrls(indicator, selector) {
 export function extractContent({ indicator, template }) {
     console.log("extractContent", indicator, template)
     sendToBackend({ type: "extract:contents", value: { indicator, template } })
+}
+
+export function sendToDatabus(msg, tabId) {
+    msg.tabId = tabId
+    window.bridge.emit("rulegen-to-databus", msg)
 }

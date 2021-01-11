@@ -10,6 +10,7 @@ let activeIndicator = {}
 let formerSelector = ''
 
 emitter.on("setPath", (e) => {
+    console.log("after setpath", activeIndicator.data)
     if (formerSelector !== e) {
         formerSelector = e
         sendMessage({ type: `selector-predict:${activeIndicator.type}`, value: { indicator: activeIndicator.data, selector: e } })
@@ -37,10 +38,11 @@ function loadSelector(selector) {
 
 function onMessage(e) {
     console.log("backend <<< ", e)
-    const msgBody = e.value
-    switch (e.type) {
+    if (e.type !== "msg-to-backend") return
+    const msg = e.data
+    switch (msg.type) {
         case "location:href":
-            window.location.href = e.value
+            window.location.href = msg.value
             break
         case "selector:clear":
             SelectorGadget.toggleClose()
@@ -48,18 +50,18 @@ function onMessage(e) {
             activeIndicator = {}
             break
         case "extract:urls":
-            onExtractUrls(msgBody)
+            onExtractUrls(msg.value)
             break
         case "extract:contents":
-            onExtractContents(msgBody)
+            onExtractContents(msg.value)
             break
         case "selector:urls":
-            activeIndicator = { type: "urls", data: msgBody.indicator }
-            loadSelector(msgBody.selector)
+            activeIndicator = { type: "urls", data: msg.value.indicator }
+            loadSelector(msg.value.selector)
             break
         case "selector:contents":
-            activeIndicator = { type: "contents", data: msgBody.indicator }
-            loadSelector(msgBody.selector)
+            activeIndicator = { type: "contents", data: msg.value.indicator }
+            loadSelector(msg.value.selector)
             break
     }
 }

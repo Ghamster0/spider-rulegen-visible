@@ -1,5 +1,5 @@
 <template>
-  <div v-if="rules.length > 0">
+  <div v-if="Object.keys(group).length > 0">
     <ul class="rules" style="margin-top: 1px">
       <li
         v-for="rule in rules"
@@ -71,8 +71,8 @@ function getDefaultRule() {
     id: uuidv4(),
     name: "",
     example: "",
-    links: [],
-    extractors: [],
+    linksConf: [],
+    contentsConf: [],
   };
 }
 
@@ -88,7 +88,7 @@ export default {
     };
   },
   computed: {
-    ...mapState({ rules: "rules", activeRuleId: "ruleId" }),
+    ...mapState({ rules: "rules", group: "group", activeRuleId: "ruleId" }),
   },
   methods: {
     handledialogOpen() {

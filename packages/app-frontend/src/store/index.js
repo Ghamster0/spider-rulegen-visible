@@ -13,7 +13,7 @@ const p = {
             name: "Rule 1",
             startUrls: ["http://www.baidu.com", "http://www.sogou.com"],
             example: "http://www.baidu.com",
-            links: [
+            linksConf: [
                 {
                     id: "" + Math.random(),
                     name: "下一页",
@@ -47,6 +47,9 @@ export function createStore() {
             ruleId: null
         }),
         mutations: {
+            SET_GROUPS(state, groups) {
+                state.groups = groups
+            },
             LOAD_GROUP(state, id) {
                 const idx = state.groups.findIndex(i => i.id === id)
                 if (idx >= 0) {
@@ -102,10 +105,9 @@ export function createStore() {
                 }
             },
             SET_RULE_LINK(state, { indicator, linkConf }) {
-                console.log(indicator, linkConf)
                 const rule = getRule(state, indicator.groupId, indicator.ruleId)
                 if (rule) {
-                    const lx = rule.links.find(i => i.id === indicator.id)
+                    const lx = rule.linksConf.find(i => i.id === indicator.id)
                     if (lx) {
                         Object.assign(lx, linkConf)
                     }
