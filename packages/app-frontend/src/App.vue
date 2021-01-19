@@ -1,29 +1,53 @@
 <template>
   <div id="app" style="height: 100vh; width: 100%">
-    <col-split>
-      <template v-slot:left>
-        <!-- sider -->
-        <groups></groups>
-        <rules></rules>
-      </template>
-      <template v-slot:right>
-        <rule-editor></rule-editor>
-      </template>
-    </col-split>
+    <template v-if="mode === 'multi'">
+      <col-split>
+        <template v-slot:left>
+          <!-- sider -->
+          <groups></groups>
+          <rules></rules>
+        </template>
+        <template v-slot:right>
+          <rule-editor></rule-editor>
+        </template>
+      </col-split>
+    </template>
+    <rule-editor v-else></rule-editor>
+
+    <div
+      v-if="currentEdit"
+      style="
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: rgb(26, 115, 232);
+        padding: 5px;
+        color: white;
+      "
+    >
+      {{ currentEdit + " (Databus)" }}
+    </div>
+
     <div style="position: absolute; bottom: 10px; right: 20px">
-      <!-- <button class="circle primary" title="保存">
-        <i class="fas fa-save"></i>
-      </button> -->
-      <button class="circle primary" title="导出" @click="handleDownload">
-        <i class="fas fa-download"></i>
-      </button>
+      <div></div>
       <button class="circle primary" @click="logg">
         <i class="fas fa-bug"></i>
       </button>
-      <button class="circle primary" @click="loadFromDatabus">
-        <i class="fas fa-search"></i>
+      <button class="circle primary" @click="handleDownload">
+        <i class="fas fa-download"></i>
       </button>
-      <button class="circle primary" @click="setBackToDatabus">
+      <button
+        class="circle primary"
+        title="从Databus导入配置"
+        @click="loadFromDatabus"
+      >
+        <i class="fas fa-file-import"></i>
+      </button>
+      <button
+        class="circle primary"
+        title="导出到Databus"
+        @click="setBackToDatabus"
+      >
         <i class="fas fa-file-export"></i>
       </button>
     </div>
@@ -38,7 +62,16 @@ import RuleEditor from "./views/RuleEditor.vue";
 import Groups from "./views/Groups.vue";
 import Rules from "./views/Rules.vue";
 import { download } from "./utils/utils";
-import { sendToDatabus } from "./utils/backend";
+import {
+  configPageReg,
+  databusTabUrl,
+  getDatabusTabId,
+  getNetlocName,
+  normalizeTemplatesNamed,
+  sendToDatabus,
+} from "./utils/databus";
+import normalizeTemplate from "./utils/normalizeTemplate";
+import { mapState } from "vuex";
 
 export default {
   name: "App",
@@ -52,6 +85,23 @@ export default {
     return {
       opTabId: "",
     };
+  },
+  computed: {
+    ...mapState(["mode", "indicator"]),
+    currentEdit() {
+      switch (this.indicator.type) {
+        case "default":
+          return "全局配置";
+        case "named":
+          return "命名配置";
+        case "path":
+          return "路径 " + this.indicator.name;
+        case "netloc":
+          return "域名 " + this.indicator.name;
+        default:
+          return "";
+      }
+    },
   },
   methods: {
     logg() {
@@ -78,44 +128,49 @@ export default {
       }
       download("rules.json", JSON.stringify(sites, null, 2));
     },
-    loadFromDatabus() {
-      chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-          if (tab.url.match(/crawl\/.+\/config/)) {
-            this.opTabId = tab.id;
-            sendToDatabus({ cmd: "query" }, tab.id);
-            chrome.tabs.executeScript(tab.id, {
-              code: `
-              if(!window.RULEGEN_INITED){
-                window.RULEGEN_INITED=true
-                chrome.runtime.onMessage.addListener(function(request){
-                  if(request.type==="rulegen-to-databus"){
-                    window.postMessage(request)
-                  }
-                })
-                window.addEventListener("message", e=>{
-                  if(e.data.type==="databus-to-rulegen"){
-                    chrome.runtime.sendMessage(e.data)
-                  }
-                })
-              }
-              `,
-            });
-            sendToDatabus({ type: "query" }, tab.id);
+    async loadFromDatabus() {
+      this.opTabId = await getDatabusTabId();
+      if (this.opTabId) {
+        sendToDatabus({ type: "query" }, this.opTabId);
+      }
+    },
+    async setBackToDatabus() {
+      if (!this.opTabId) {
+        this.opTabId = await getDatabusTabId();
+        return;
+      }
+      const dbUrl = await databusTabUrl(this.opTabId);
+      if (!dbUrl) {
+        window.alert("目标选项卡已关闭");
+        return;
+      } else if (!dbUrl.match(configPageReg)) {
+        window.alert("请确保Databus打开“配置中心”页面，并选中“种子相关”选项卡");
+        return;
+      }
+      const payload = { type: "set", mode: this.mode };
+      if (this.mode === "multi") {
+        const groups = this.$store.state.groups;
+        for (const group of groups) {
+          for (const rule of group.rules) {
+            if (rule.contentsConf) {
+              rule.contentsConf = normalizeTemplate(rule.contentsConf);
+            }
           }
         }
-      });
+        payload.data = groups;
+      } else {
+        const rule = this.$store.state.rule;
+        if (rule.contentsConf) {
+          rule.contentsConf = normalizeTemplate(rule.contentsConf);
+        }
+        payload.data = rule;
+        payload.indicator = this.$store.state.indicator;
+      }
+      const opId = this.opTabId;
+      sendToDatabus(payload, opId);
+      /* global chrome*/
+      chrome.tabs.update(opId, { active: true });
     },
-    setBackToDatabus() {
-      sendToDatabus(
-        { type: "set", data: this.$store.state.groups },
-        this.opTabId
-      );
-      chrome.tabs.update(this.opTabId, { active: true });
-    },
-  },
-  created() {
-    window.addEventListener("message", (e) => console.log(e));
   },
 };
 </script>

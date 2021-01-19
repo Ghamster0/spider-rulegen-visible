@@ -6,11 +6,10 @@ import extractor from "./extractor"
 const emitter = new EventEmitter()
 SelectorGadget.prototype.emitter = emitter
 
-let activeIndicator = {}
-let formerSelector = ''
+window.activeIndicator = {}
+window.formerSelector = ''
 
 emitter.on("setPath", (e) => {
-    console.log("after setpath", activeIndicator.data)
     if (formerSelector !== e) {
         formerSelector = e
         sendMessage({ type: `selector-predict:${activeIndicator.type}`, value: { indicator: activeIndicator.data, selector: e } })
@@ -36,7 +35,7 @@ function loadSelector(selector) {
     formerSelector = SelectorGadget.toggleOpen().refreshFromPath({ value: selector })
 }
 
-function onMessage(e) {
+const onMessage = (e) => {
     console.log("backend <<< ", e)
     if (e.type !== "msg-to-backend") return
     const msg = e.data

@@ -11,5 +11,6 @@ function sendMessage(msg) {
 function handlers(onMessage, onDisconnect) {
     port.onMessage.addListener(onMessage)
     port.onDisconnect.addListener(onDisconnect)
+    port.onDisconnect.addListener(() => port.onMessage.removeListener(onMessage))
 }
 initBackend(sendMessage, handlers)

@@ -65,16 +65,7 @@ import { mapState } from "vuex";
 import { stringSplit } from "../utils/utils";
 import { v4 as uuidv4 } from "uuid";
 import AppDialog from "../components/Dialog.vue";
-
-function getDefaultRule() {
-  return {
-    id: uuidv4(),
-    name: "",
-    example: "",
-    linksConf: [],
-    contentsConf: [],
-  };
-}
+import { getDefaultRule } from '../utils/defaultValues';
 
 export default {
   components: { AppDialog },
@@ -91,10 +82,14 @@ export default {
     ...mapState({ rules: "rules", group: "group", activeRuleId: "ruleId" }),
   },
   methods: {
-    handledialogOpen() {
+    async handledialogOpen() {
       this.dialog.visible = true;
       this.dialog.name = "start_urls";
-      this.dialog.startUrls = window.location.href;
+      this.dialog.startUrls = await new Promise((r) => {
+        chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+          r(tabs[0].url);
+        });
+      });
     },
     handleAddRule() {
       if (!this.dialog.name || !this.dialog.startUrls) {

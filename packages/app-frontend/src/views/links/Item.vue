@@ -16,7 +16,7 @@
         @keydown.enter="loadSelector(lx)"
       />
     </div>
-    <div class="lx-column">
+    <div class="lx-column" v-if="mode === 'multi'">
       <span style="margin-right: 5px">handler</span>
       <select
         :value="lx.handler"
@@ -30,6 +30,9 @@
         <i class="fas fa-plus"></i>
       </button>
     </div>
+    <button class="text-btn ml-auto" @click.stop="$emit('delete')">
+      <i class="fas fa-times-circle"></i>
+    </button>
     <div style="width: 100%"></div>
     <div v-if="lx.urls && lx.urls.length" class="lx-urls">
       <pre style="margin: 0">{{ lx.urls.join("\n") }}</pre>
@@ -50,7 +53,7 @@ export default {
     handlerOptions: Array,
   },
   computed: {
-    ...mapState(["groupId", "ruleId"]),
+    ...mapState(["groupId", "ruleId", "mode"]),
   },
   methods: {
     handleUnselect(lx) {
@@ -74,7 +77,7 @@ export default {
     },
     handleHandlerChange(handler, lx) {
       this.$store.commit("SET_RULE_LINK", {
-        indicate: { groupId: this.groupId, ruleId: this.ruleId, id: lx.id },
+        indicator: { groupId: this.groupId, ruleId: this.ruleId, id: lx.id },
         linkConf: { handler: handler },
       });
     },

@@ -2,7 +2,7 @@
   <div class="column">
     <div class="column-left">
       <div class="resize-bar"></div>
-      <div class="resize-line"></div>
+      <div class="resize-line" :style="borderColor"></div>
       <div class="resize-save">
         <slot name="left"></slot>
       </div>
@@ -14,7 +14,23 @@
 </template>
 
 <script>
-export default {};
+export default {
+  props: {
+    color: {
+      type: String,
+      default: "",
+    },
+  },
+  computed: {
+    borderColor() {
+      const res = {};
+      if (this.color) {
+        res["border-color"] = this.color;
+      }
+      return res;
+    },
+  },
+};
 </script>
 
 <style scoped>

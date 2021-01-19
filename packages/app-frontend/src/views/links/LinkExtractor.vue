@@ -1,6 +1,12 @@
 <template>
-  <div style="height: 100%; padding: 5px; overflow: scroll">
-    <span style="margin-bottom: 5px; display: block">Link Rules</span>
+  <div
+    style="
+      padding: 5px;
+      overflow-y: scroll;
+      height: 100%;
+      box-sizing: border-box;
+    "
+  >
     <div class="rules">
       <item
         v-for="lx in linksConf"
@@ -8,6 +14,7 @@
         :lx="lx"
         :activeId.sync="activeId"
         :handlerOptions="handlerOptions"
+        @delete="handleDelete(lx.id)"
       ></item>
       <button @click="handleAdd">+ Add</button>
     </div>
@@ -34,7 +41,9 @@ export default {
   computed: {
     ...mapState(["group", "groupId", "ruleId"]),
     handlerOptions() {
-      return this.group.rules.map((r) => ({ name: r.name, id: r.id }));
+      return this.group.rules
+        ? this.group.rules.map((r) => ({ name: r.name, id: r.id }))
+        : [];
     },
   },
   methods: {
@@ -46,6 +55,12 @@ export default {
     },
     handleAdd() {
       this.linksConf.push(getDefaultLx());
+    },
+    handleDelete(id) {
+      const idx = this.linksConf.findIndex((l) => l.id === id);
+      if (idx >= 0) {
+        this.linksConf.splice(idx, 1);
+      }
     },
   },
   watch: {

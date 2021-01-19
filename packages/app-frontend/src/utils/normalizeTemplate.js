@@ -78,4 +78,17 @@ let getParentSelector = function (template) {
     return template;
 };
 
+export const unNormalizeTemplate = (template, prefix = "") => {
+    const rawSelector = prefix ? prefix + " " + template.selector : template.selector
+    if (template.method === "table" || template.method === "object") {
+        for (const ct of template.listData) {
+            unNormalizeTemplate(ct, rawSelector)
+        }
+    } else {
+        template.rawSelector = rawSelector
+    }
+    template.contents = ""
+    return template
+}
+
 export default normalizeTemplate;

@@ -21,16 +21,16 @@
     <button
       class="text-btn"
       style="padding: 2px 4px"
-      @click="siteDialog.visible = true"
+      @click="groupDialog.visible = true"
     >
       <i class="fas fa-plus-circle"></i>
     </button>
-    <app-dialog :visible.sync="siteDialog.visible">
+    <app-dialog :visible.sync="groupDialog.visible">
       <form class="form">
         <div class="form-item">
           <label for="name">名称</label>
           <input
-            v-model="siteDialog.name"
+            v-model="groupDialog.name"
             style="width: 100%; box-sizing: border-box"
           />
         </div>
@@ -46,15 +46,7 @@
 <script>
 import AppDialog from "../components/Dialog.vue";
 import { mapState } from "vuex";
-import { v4 as uuidv4 } from "uuid";
-
-function getDefaultGroup() {
-  return {
-    id: uuidv4(),
-    name: "",
-    rules: [],
-  };
-}
+import { getDefaultGroup } from '../utils/defaultValues';
 
 export default {
   components: {
@@ -73,20 +65,20 @@ export default {
   },
   data() {
     return {
-      siteDialog: {
+      groupDialog: {
         visible: false,
-        name: "New Group",
+        name: "",
       },
     };
   },
   methods: {
     handleAddSite() {
       const group = Object.assign(getDefaultGroup(), {
-        name: this.siteDialog.name,
+        name: this.groupDialog.name,
       });
       this.$store.commit("PUSH_GROUP", group);
-      this.siteDialog.visible = false;
-      this.siteDialog.name = "New Site";
+      this.groupDialog.visible = false;
+      this.groupDialog.name = "";
     },
   },
 };

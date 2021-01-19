@@ -1,12 +1,20 @@
 import { v4 as uuidv4 } from "uuid"
 
+export function getDefaultGroup() {
+    return {
+        id: uuidv4(),
+        name: "",
+        rules: [],
+    };
+}
+
 export function getDefaultRule() {
     return {
         id: uuidv4(),
         name: "",
         example: "",
-        links: [],
-        extractors: [],
+        linksConf: [],
+        contentsConf: null
     };
 }
 

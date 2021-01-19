@@ -14,3 +14,11 @@ export const download = (fileName, text) => {
 
     document.body.removeChild(element);
 }
+
+export const isExpandable = (templateOrMethod) => {
+    let method = templateOrMethod
+    if (templateOrMethod && templateOrMethod.method) {
+        method = templateOrMethod.method
+    }
+    return method === "table" || method === "object"
+}

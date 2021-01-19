@@ -1,4 +1,3 @@
-import { template } from 'lodash'
 import Vue from 'vue'
 import Vuex from 'vuex'
 
@@ -8,43 +7,49 @@ const p = {
     id: "15615-1135-1-65156102-1sd",
     name: "Group Default",
     rules: [
-        {
-            id: "rule_id1",
-            name: "Rule 1",
-            startUrls: ["http://www.baidu.com", "http://www.sogou.com"],
-            example: "http://www.baidu.com",
-            linksConf: [
-                {
-                    id: "" + Math.random(),
-                    name: "下一页",
-                    selector: ".links",
-                    urls: [
-                        "http://www.baidu.com",
-                        "https://www.sogou.com"
-                    ],
-                    handler: ""
-                },
-            ],
-            contentsConf: null
-        }
+        // {
+        //     id: "rule_id1",
+        //     name: "Rule 1",
+        //     startUrls: ["http://www.baidu.com", "http://www.sogou.com"],
+        //     example: "http://www.baidu.com",
+        //     linksConf: [
+        //         {
+        //             id: "" + Math.random(),
+        //             name: "下一页",
+        //             selector: ".links",
+        //             urls: [
+        //                 "http://www.baidu.com",
+        //                 "https://www.sogou.com"
+        //             ],
+        //             handler: ""
+        //         },
+        //     ],
+        //     contentsConf: null
+        // }
     ]
 }
 
 function getRule(state, groupId, ruleId) {
-    const group = state.groups.find(i => i.id === groupId)
-    return group && group.rules.find(i => i.id === ruleId)
+    if (groupId === null) {
+        return state.rule.id === ruleId ? state.rule : null
+    } else {
+        const group = state.groups.find(i => i.id === groupId)
+        return group && group.rules.find(i => i.id === ruleId)
+    }
 }
 
 export function createStore() {
     const store = new Vuex.Store({
         state: () => ({
             mode: "multi",
+            indicator: {},
             groups: [p],
             group: {},
             groupId: null,
             rules: [],
             rule: {},
-            ruleId: null
+            ruleId: null,
+            predictVersion: 0,
         }),
         mutations: {
             SET_GROUPS(state, groups) {
@@ -70,7 +75,6 @@ export function createStore() {
                 if (idx >= 0) {
                     state.groups.splice(idx, 1)
                 }
-                console.log(state.groups, idx)
             },
             LOAD_RULE(state, id) {
                 const idx = state.rules.findIndex(i => i.id === id)
@@ -83,13 +87,8 @@ export function createStore() {
                 }
             },
             SET_RULE(state, rule) {
-                const idx = state.rules.findIndex(i => i.id === rule.id)
-                if (idx >= 0) {
-                    state.rules[idx] = { ...state.rules[idx], ...rule }
-                    if (state.rule.id === rule.id) {
-                        state.rule = state.rules[idx]
-                    }
-                }
+                state.rule = rule
+                state.ruleId = rule.id
             },
             PUSH_RULE(state, rule) {
                 state.rules.push(rule)
@@ -131,7 +130,6 @@ export function createStore() {
 
                 if (rule) {
                     const item = recursionFind(rule.contentsConf, indicator.id)
-                    console.log(item)
                     if (item) {
                         if (templatePatch.selector) {
                             templatePatch.rawSelector = templatePatch.selector
@@ -139,6 +137,9 @@ export function createStore() {
                         Object.assign(item, templatePatch)
                     }
                 }
+            },
+            PREDICT_ADD(state) {
+                state.predictVersion += 1
             }
         },
         actions: {
@@ -165,6 +166,19 @@ export function createStore() {
                     commit("LOAD_RULE", null)
                 }
             },
+            loadSingle({ commit, state }, { rule, indicator }) {
+                state.mode = 'single'
+                state.indicator = indicator
+                commit("SET_GROUPS", [])
+                commit("LOAD_GROUP", "")
+                commit("SET_RULE", rule)
+            },
+            loadMulti({ commit, state }, { groups, indicator }) {
+                state.mode = "multi"
+                state.indicator = indicator
+                commit("SET_GROUPS", groups)
+                this.dispatch("selectGroup", groups.length > 0 ? groups[0].id : null)
+            }
         }
     })
     return store
