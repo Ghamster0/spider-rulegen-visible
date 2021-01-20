@@ -14,7 +14,7 @@ exports.createConfig = (config, target = { chrome: 52 }) => {
     }
 
     const baseConfig = {
-        mode: process.env.ENV === 'production' ? 'production' : 'development',
+        mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
         resolve: {
             extensions: ['.js', '.vue'],
             alias: {
@@ -45,12 +45,15 @@ exports.createConfig = (config, target = { chrome: 52 }) => {
                     use: [
                         'vue-style-loader',
                         'css-loader',
-                        {
-                            loader: `postcss-loader`,
-                            options: {
-                                options: {}
-                            }
-                        }
+                        // {
+                        //     loader: `postcss-loader`,
+                        //     options: {
+                        //         indent: 'postcss'
+                        //         options: {
+                        //             parser: 'sugarss'
+                        //         }
+                        //     }
+                        // }
                     ]
                 },
                 {
@@ -58,16 +61,14 @@ exports.createConfig = (config, target = { chrome: 52 }) => {
                     use: [
                         'vue-style-loader',
                         'css-loader',
-                        'postcss-loader',
+                        // 'postcss-loader',
                         'stylus-loader',
-                        // {
-                        //     loader: 'style-resources-loader',
-                        //     options: {
-                        //         patterns: [
-                        //             require.resolve('@vue-devtools/app-frontend/src/style/imports.styl')
-                        //         ]
-                        //     }
-                        // }
+                        {
+                            loader: 'style-resources-loader',
+                            options: {
+                                patterns: []
+                            }
+                        }
                     ]
                 },
                 {
@@ -94,11 +95,11 @@ exports.createConfig = (config, target = { chrome: 52 }) => {
         }
     }
 
-    if (process.env.ENV === 'production') {
+    if (process.env.NODE_ENV === 'production') {
         const UglifyPlugin = require('uglifyjs-webpack-plugin')
         baseConfig.plugins.push(
             new webpack.DefinePlugin({
-                'process.env.ENV': '"production"'
+                'process.env.NODE_ENV': '"production"'
             })
         )
         baseConfig.optimization = {

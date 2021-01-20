@@ -1,6 +1,8 @@
 import normalizeTemplate, { unNormalizeTemplate } from "./normalizeTemplate";
 import { v4 as uuidv4 } from 'uuid'
 
+const version = require('../../package.json').version
+
 export const configPageReg = /crawl\/.+\/config/
 
 export function getDatabusTabId() {
@@ -62,6 +64,10 @@ export const initDatabusListener = (store) => {
     /* global bridge*/
     bridge.on("databus-to-rulegen", e => {
         console.log("databus -> rulegen", e)
+        if (e.err) {
+            window.alert(e.err)
+            return
+        }
         if (window.confirm("从Databus平台导入配置？")) {
             if (e.mode === "multi") {
                 const groups = e.groups
@@ -91,6 +97,7 @@ export function sendToDatabus(msg, tabId) {
     }
     ensureDatabusReady(tabId)
     msg.tabId = tabId
+    msg.version = version
     window.bridge.emit("rulegen-to-databus", msg)
 }
 

@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "cd packages/shell-chrome && cross-env NODE_ENV=production webpack --progress --hide-modules"
+    "build:dev": "cd packages/shell-chrome && yarn upgrade && webpack",
+    "build": "cd packages/shell-chrome && cross-env NODE_ENV=production webpack --progress --hide-modules",
+    "zip": "cd packages && zip -r -FS ../dist/chrome.zip shell-chrome -x *src/* -x *webpack.comfig.js -x *node_modules/* -x *yarn* -x *webpack.config.js -x *package*.json",
+    "release": "npm run build && npm run zip"
   },
   "repository": {
     "type": "git",

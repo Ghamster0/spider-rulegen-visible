@@ -29,8 +29,7 @@
     </div>
 
     <div style="position: absolute; bottom: 10px; right: 20px">
-      <div></div>
-      <button class="circle primary" @click="logg">
+      <button class="circle primary" @click="logg" v-if="false">
         <i class="fas fa-bug"></i>
       </button>
       <button class="circle primary" @click="handleDownload">

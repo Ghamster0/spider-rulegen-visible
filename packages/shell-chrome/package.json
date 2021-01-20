@@ -1,6 +1,7 @@
 {
     "name": "@spider-rulegen/shell-chrome",
     "version": "0.0.0",
+    "license": "MIT",
     "dependencies": {},
     "devDependencies": {
         "@spider-rulegen/app-backend": "../app-backend",
